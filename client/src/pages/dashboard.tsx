@@ -127,7 +127,7 @@ export default function Dashboard() {
   };
   
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col md:flex-row h-screen">
       <Sidebar 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
@@ -137,10 +137,10 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title={activeTab === "messages" ? "Messages" : "Users"} 
-          userName={usersState.currentUser?.name || "Admin"} 
+          userName={usersState.currentUser?.name || "Admin User"} 
         />
         
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-6">
+        <main className="flex-1 overflow-y-auto bg-slate-50 p-3 md:p-6">
           {activeTab === "messages" ? (
             <MessagesList 
               messages={messagesState.messages}

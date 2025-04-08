@@ -32,24 +32,25 @@ const MessagesList: FC<MessagesListProps> = ({
   return (
     <div>
       {/* Action Bar */}
-      <div className="flex justify-between mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <h2 className="text-lg font-semibold text-slate-800">Manage Messages</h2>
         <Button onClick={onCreateMessage}>
           <Plus className="h-4 w-4 mr-2" />
-          Create New Message
+          <span className="hidden sm:inline">Create New Message</span>
+          <span className="sm:hidden">New</span>
         </Button>
       </div>
 
       {/* Messages Table */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b border-slate-200">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <h3 className="font-medium text-slate-700">Existing Messages</h3>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto max-w-sm">
               <Input 
                 type="text" 
                 placeholder="Search messages..." 
-                className="pl-8" 
+                className="pl-8 w-full" 
               />
               <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-400" />
             </div>
@@ -65,10 +66,10 @@ const MessagesList: FC<MessagesListProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead className="hidden sm:table-cell">ID</TableHead>
                   <TableHead>Message Preview</TableHead>
-                  <TableHead>Fixed Reply</TableHead>
-                  <TableHead>Created At</TableHead>
+                  <TableHead className="hidden sm:table-cell">Fixed Reply</TableHead>
+                  <TableHead className="hidden md:table-cell">Created At</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -82,18 +83,21 @@ const MessagesList: FC<MessagesListProps> = ({
                 ) : (
                   messages.map((message) => (
                     <TableRow key={message.id}>
-                      <TableCell className="font-medium">#{message.id}</TableCell>
+                      <TableCell className="hidden sm:table-cell font-medium">#{message.id}</TableCell>
                       <TableCell>
                         <div className="max-w-xs truncate">
                           {message.content}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={message.fixedReplyRequired ? "success" : "secondary"}>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge 
+                          variant={message.fixedReplyRequired ? "default" : "secondary"}
+                          className={message.fixedReplyRequired ? "bg-green-500" : ""}
+                        >
                           {message.fixedReplyRequired ? "Yes" : "No"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {message.createdAt 
                           ? formatDate(new Date(message.createdAt), 'yyyy-MM-dd') 
                           : 'N/A'}

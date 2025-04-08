@@ -85,23 +85,27 @@ const UsersList: FC<UsersListProps> = ({
   return (
     <div>
       {/* Action Bar */}
-      <div className="flex justify-between mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <h2 className="text-lg font-semibold text-slate-800">Manage Users</h2>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <Button 
             onClick={onSendPromo} 
             disabled={selectedUsers.length === 0}
+            className="text-xs sm:text-sm"
           >
-            <Layers className="h-4 w-4 mr-2" />
-            Send Promo
+            <Layers className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Send Promo</span>
+            <span className="sm:hidden">Promo</span>
           </Button>
           <Button 
             variant="destructive" 
             onClick={onDeleteUsers} 
             disabled={selectedUsers.length === 0}
+            className="text-xs sm:text-sm"
           >
-            <Trash className="h-4 w-4 mr-2" />
-            Delete Selected
+            <Trash className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Delete Selected</span>
+            <span className="sm:hidden">Delete</span>
           </Button>
         </div>
       </div>
@@ -109,18 +113,18 @@ const UsersList: FC<UsersListProps> = ({
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b border-slate-200">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center space-x-2">
               <h3 className="font-medium text-slate-700">User List</h3>
-              <Badge variant="outline" className="bg-primary-100 text-primary">
+              <Badge variant="outline" className="bg-primary/10 text-primary">
                 {selectedUsers.length} Selected
               </Badge>
             </div>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto max-w-sm">
               <Input 
                 type="text" 
                 placeholder="Search users..." 
-                className="pl-8" 
+                className="pl-8 w-full" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -148,10 +152,10 @@ const UsersList: FC<UsersListProps> = ({
                       aria-label="Select all users"
                     />
                   </TableHead>
-                  <TableHead>ID</TableHead>
+                  <TableHead className="hidden sm:table-cell">ID</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Joined Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Phone</TableHead>
+                  <TableHead className="hidden md:table-cell">Joined Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -172,7 +176,7 @@ const UsersList: FC<UsersListProps> = ({
                           aria-label={`Select ${user.name}`}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">#{user.id}</TableCell>
+                      <TableCell className="hidden sm:table-cell font-medium">#{user.id}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Avatar className="h-8 w-8 bg-slate-200">
@@ -184,8 +188,8 @@ const UsersList: FC<UsersListProps> = ({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{user.phone}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">{user.phone}</TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {user.joinedDate 
                           ? formatDate(new Date(user.joinedDate), 'yyyy-MM-dd') 
                           : 'N/A'}
