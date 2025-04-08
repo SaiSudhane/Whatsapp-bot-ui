@@ -83,9 +83,21 @@ export class MemStorage implements IStorage {
       joinedDate: new Date("2023-05-01"),
     };
     
+    // Admin user for easy login
+    const adminUser: User = {
+      id: this.userCurrentId++,
+      username: "admin",
+      password: "password", // In a real app, this would be hashed
+      name: "Admin User",
+      email: "admin@example.com",
+      phone: "+1 (555) 999-0000",
+      joinedDate: new Date(),
+    };
+    
     this.users.set(user1.id, user1);
     this.users.set(user2.id, user2);
     this.users.set(user3.id, user3);
+    this.users.set(adminUser.id, adminUser);
     
     // Sample messages
     const message1: Message = {
