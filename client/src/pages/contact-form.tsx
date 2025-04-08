@@ -25,6 +25,7 @@ const contactFormSchema = z.object({
     message: "You must agree to the privacy policy to continue",
   }),
   recaptcha_token: z.string().optional(), // Will be set programmatically
+  message: z.string().optional(), // Adding as optional for API compatibility
 });
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
@@ -84,6 +85,7 @@ export default function ContactForm() {
         advisor_id: advisorId,
         recaptcha_token: recaptchaToken,
         mobile_number: `${data.country_code}${data.mobile_number.replace(/^0+/, '')}`, // Normalize number format
+        message: data.message || "", // Ensure message is included for API compatibility
       };
       
       // Make API call to backend

@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Function to refresh the token
   const refreshToken = async () => {
     try {
-      const res = await fetch("https://backend.myadvisor.sg/api/auth/refresh", {
+      const res = await fetch("https://backend.myadvisor.sg/refresh", {
         method: "POST",
         credentials: 'include',
         headers: {
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: LoginCredentials) => {
       try {
         // Direct API call to backend
-        const res = await fetch("https://backend.myadvisor.sg/api/auth/login", {
+        const res = await fetch("https://backend.myadvisor.sg/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       try {
-        const res = await fetch("https://backend.myadvisor.sg/api/auth/logout", {
+        const res = await fetch("https://backend.myadvisor.sg/logout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
