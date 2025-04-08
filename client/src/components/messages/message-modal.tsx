@@ -109,10 +109,10 @@ const MessageModal: FC<MessageModalProps> = ({ isOpen, onClose, message, advisor
       return;
     }
     
-    if (!triggerKeyword.trim()) {
+    if (isPredefinedAnswer && !triggerKeyword.trim()) {
       toast({
         title: "Validation error",
-        description: "Trigger keyword is required",
+        description: "Trigger keyword is required for predefined answers",
         variant: "destructive"
       });
       return;
@@ -172,8 +172,30 @@ const MessageModal: FC<MessageModalProps> = ({ isOpen, onClose, message, advisor
             />
           </div>
 
-          {!isEditing && (
-            <div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="predefined-answer-toggle"
+                checked={isPredefinedAnswer}
+                onCheckedChange={(checked) => {
+                  setIsPredefinedAnswer(checked as boolean);
+                  if (!checked) setTriggerKeyword("");
+                }}
+                disabled={isEditing}
+              />
+              <Label htmlFor="predefined-answer-toggle" className={isEditing ? "text-slate-400" : ""}>
+                Predefined Answer Required
+              </Label>
+            </div>
+            {!isEditing && (
+              <p className="text-xs text-slate-500 mt-1 ml-6">
+                When enabled, this question will be triggered by a specific keyword and will have predefined reply options
+              </p>
+            )}
+          </div>
+          
+          {!isEditing && isPredefinedAnswer && (
+            <div className="mt-4">
               <Label htmlFor="trigger-keyword" className="block text-sm font-medium text-slate-700 mb-1">
                 Trigger Keyword
               </Label>
@@ -185,7 +207,7 @@ const MessageModal: FC<MessageModalProps> = ({ isOpen, onClose, message, advisor
                 maxLength={50}
               />
               <p className="text-xs text-slate-500 mt-1">
-                This is the keyword that will trigger this question
+                This is the keyword that will trigger a predefined response
               </p>
             </div>
           )}
@@ -207,18 +229,6 @@ const MessageModal: FC<MessageModalProps> = ({ isOpen, onClose, message, advisor
               </p>
             </div>
           )}
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="predefined-answer-toggle"
-              checked={isPredefinedAnswer}
-              onCheckedChange={(checked) => setIsPredefinedAnswer(checked as boolean)}
-              disabled={isEditing}
-            />
-            <Label htmlFor="predefined-answer-toggle" className={isEditing ? "text-slate-400" : ""}>
-              Predefined Answer Required
-            </Label>
-          </div>
         </div>
         
         <DialogFooter>
