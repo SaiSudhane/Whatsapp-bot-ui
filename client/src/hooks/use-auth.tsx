@@ -46,13 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       try {
-        const res = await fetch("https://backend.myadvisor.sg/login", {
+        // Use our proxy endpoint instead of direct API call
+        const res = await fetch("/api/proxy/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(credentials),
-          mode: "cors"
         });
         
         if (!res.ok) {
@@ -113,12 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       try {
-        const res = await fetch("https://backend.myadvisor.sg/logout", {
+        // Use our proxy endpoint instead of direct API call
+        const res = await fetch("/api/proxy/logout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-          },
-          mode: "cors"
+          }
         });
         
         if (!res.ok) {

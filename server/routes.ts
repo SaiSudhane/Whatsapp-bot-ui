@@ -19,6 +19,42 @@ declare module "express-session" {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add proxy endpoints for the external API
+  app.post("/api/proxy/login", async (req, res) => {
+    try {
+      console.log("Proxying login request to external API", req.body);
+      const response = await fetch("https://backend.myadvisor.sg/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(req.body),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy login error:", error);
+      res.status(500).json({ message: "Failed to connect to external API" });
+    }
+  });
+  
+  app.post("/api/proxy/logout", async (req, res) => {
+    try {
+      const response = await fetch("https://backend.myadvisor.sg/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy logout error:", error);
+      res.status(200).json({ message: "Logged out" }); // Always return success for logout
+    }
+  });
   // Session setup
   app.use(
     session({
