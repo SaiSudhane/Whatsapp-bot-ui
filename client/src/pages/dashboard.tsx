@@ -18,7 +18,7 @@ import { Loader2 } from "lucide-react";
 export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, advisor } = useAuth();
+  const { user, advisor, logoutMutation } = useAuth();
   
   const [activeTab, setActiveTab] = useState<"messages" | "users">("messages");
   const [messageModalOpen, setMessageModalOpen] = useState(false);
@@ -121,7 +121,9 @@ export default function Dashboard() {
   
   // Handlers
   const handleLogout = () => {
-    if (user) window.location.href = "/auth";
+    if (user) {
+      logoutMutation.mutate();
+    }
   };
   
   const handleOpenMessageModal = (messageId?: number) => {

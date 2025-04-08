@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { Bell } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -27,14 +26,7 @@ const Header: FC<HeaderProps> = ({ title, userName }) => {
           {title}
         </h1>
         
-        <div className="flex items-center space-x-3 md:space-x-4">
-          <div className="relative">
-            <button className="flex items-center text-slate-600 hover:text-slate-800">
-              <Bell className="h-5 w-5" />
-            </button>
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-          </div>
-          
+        <div className="flex items-center">
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8 bg-primary">
               <AvatarFallback>{getInitials(userName)}</AvatarFallback>

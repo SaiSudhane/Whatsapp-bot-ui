@@ -37,11 +37,17 @@ const MessagesList: FC<MessagesListProps> = ({
 }) => {
   const [selectedMessage, setSelectedMessage] = useState<Question | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const handleViewMessage = (message: Question) => {
     setSelectedMessage(message);
     setIsViewOpen(true);
   };
+  
+  // Filter messages based on question content
+  const filteredMessages = messages.filter(message => 
+    message.question.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   return (
     <div>
       {/* Action Bar */}
@@ -63,7 +69,9 @@ const MessagesList: FC<MessagesListProps> = ({
               <Input 
                 type="text" 
                 placeholder="Search questions..." 
-                className="pl-8 w-full" 
+                className="pl-8 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-400" />
             </div>
@@ -86,14 +94,14 @@ const MessagesList: FC<MessagesListProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {messages.length === 0 ? (
+                {filteredMessages.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-slate-500">
-                      No questions found. Create your first question.
+                      {searchQuery ? "No matching questions found." : "No questions found. Create your first question."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  messages.map((message) => (
+                  filteredMessages.map((message) => (
                     <TableRow key={message.id}>
                       <TableCell>
                         <div className="max-w-xs truncate">
@@ -155,7 +163,9 @@ const MessagesList: FC<MessagesListProps> = ({
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-slate-700">
-                  Showing <span className="font-medium">1</span> to <span className="font-medium">{messages.length}</span> of <span className="font-medium">{messages.length}</span> results
+                  {searchQuery 
+                    ? `Showing ${filteredMessages.length} of ${messages.length} questions` 
+                    : `Showing all ${messages.length} questions`}
                 </p>
               </div>
               <div>
