@@ -44,7 +44,7 @@ export default function AuthPage() {
           <div className="h-full flex flex-col justify-between">
             <div>
               <div className="flex justify-center mb-8">
-                <img src="/logo-color.jpg" alt="MyAdvisor.sg Logo" className="h-16 object-contain" />
+                <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-16 object-contain" />
               </div>
               <h1 className="text-3xl font-bold mb-6">Admin Portal</h1>
               <p className="text-lg opacity-90 mb-8">
@@ -73,7 +73,7 @@ export default function AuthPage() {
             </div>
             <div className="pt-12 border-t border-white/20 mt-12">
               <p className="text-sm opacity-80">
-                © 2023 MyAdvisor.sg. All rights reserved.
+                © 2025 MyAdvisor.sg. All rights reserved.
               </p>
             </div>
           </div>
@@ -84,7 +84,7 @@ export default function AuthPage() {
           <Card className="w-full">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
-                <img src="/logo.png" alt="MyAdvisor.sg Logo" className="h-12 object-contain" />
+                <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-12 object-contain" />
               </div>
               <CardTitle>Admin Login</CardTitle>
               <CardDescription>Enter your credentials to access the admin dashboard</CardDescription>

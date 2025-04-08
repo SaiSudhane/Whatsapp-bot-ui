@@ -49,9 +49,8 @@ const Sidebar: FC<SidebarProps> = ({ activeTab, onTabChange, onLogout }) => {
         } w-72 bg-slate-800 text-white flex flex-col transition-transform duration-200 ease-in-out`}
       >
         <div className="p-4 border-b border-slate-700 flex items-center">
-          {/* Logo Placeholder - would use actual logo in production */}
-          <div className="h-10 w-32 bg-slate-700 rounded flex items-center justify-center">
-            <span className="text-slate-300 text-sm">Company Logo</span>
+          <div className="h-10 flex items-center justify-center">
+            <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-10" />
           </div>
         </div>
         

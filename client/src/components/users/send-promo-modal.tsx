@@ -10,9 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Layers, Loader2 } from "lucide-react";
-import WhatsAppTextEditor from "@/components/ui/whatsapp-text-editor";
 
 interface SendPromoModalProps {
   isOpen: boolean;
@@ -33,19 +32,19 @@ const SendPromoModal: FC<SendPromoModalProps> = ({
 }) => {
   const { toast } = useToast();
   
-  const [message, setMessage] = useState("");
+  const [contentSid, setContentSid] = useState("");
   
   const handleSendPromo = () => {
-    if (!message.trim()) {
+    if (!contentSid.trim()) {
       toast({
         title: "Validation error",
-        description: "Message content is required",
+        description: "Content SID is required",
         variant: "destructive"
       });
       return;
     }
     
-    onSendMessage(message);
+    onSendMessage(contentSid);
   };
   
   return (
@@ -58,15 +57,20 @@ const SendPromoModal: FC<SendPromoModalProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="mt-4">
-          <WhatsAppTextEditor
-            value={message}
-            onChange={setMessage}
-            placeholder="Type your message here... Use WhatsApp formatting if needed"
-            maxLength={500}
-            label="Message Content"
-          />
-
+        <div className="mt-4 space-y-4">
+          <div>
+            <Label htmlFor="content-sid">Content SID</Label>
+            <Input
+              id="content-sid"
+              value={contentSid}
+              onChange={(e) => setContentSid(e.target.value)}
+              placeholder="Enter Content SID"
+              className="mt-1"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Enter the Content SID for the WhatsApp template message
+            </p>
+          </div>
         </div>
         
         <DialogFooter>

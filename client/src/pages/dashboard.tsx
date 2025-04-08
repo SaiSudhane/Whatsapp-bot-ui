@@ -197,10 +197,10 @@ export default function Dashboard() {
     }
   };
   
-  const handleSendPromoMessage = (message: string) => {
+  const handleSendPromoMessage = (contentSid: string) => {
     sendMessageMutation.mutate({
       user_ids: selectedUsers,
-      message
+      message: contentSid // This will now be the Content SID
     });
   };
   
