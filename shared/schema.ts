@@ -49,7 +49,7 @@ export const insertReplySchema = createInsertSchema(replies).pick({
 });
 
 export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Valid email is required"),
   password: z.string().min(1, "Password is required"),
 });
 

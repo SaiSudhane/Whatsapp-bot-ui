@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -17,34 +17,49 @@ type AuthContextType = {
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password">;
+type LoginData = {
+  email: string;
+  password: string;
+};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<SelectUser | null, Error>({
-    queryKey: ["/api/auth/me"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
+  // We need to handle this differently since the FastAPI doesn't have a "me" endpoint
+  // Instead, we'll store the user in local storage after login and retrieve it here
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (err) {
+        console.error("Failed to parse stored user", err);
+        localStorage.removeItem('user');
+      }
+    }
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      const res = await apiRequest("POST", "/api/login", credentials);
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Login failed");
+        throw new Error(errorData.detail || "Login failed");
       }
-      return await res.json();
+      const data = await res.json();
+      return data.advisor; // The FastAPI returns { message: string, advisor: object }
     },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/auth/me"], user);
+    onSuccess: (user: any) => {
+      // Store user in localStorage for persistence
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.name}!`,
+        description: `Welcome back, ${user.name || 'User'}!`,
       });
     },
     onError: (error: Error) => {
@@ -83,14 +98,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/auth/logout");
+      const res = await apiRequest("POST", "/api/logout");
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Logout failed");
+        throw new Error(errorData.detail || "Logout failed");
       }
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/me"], null);
+      // Clear user from local storage
+      localStorage.removeItem('user');
+      setUser(null);
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",

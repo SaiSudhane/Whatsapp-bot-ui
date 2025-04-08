@@ -12,11 +12,16 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Determine if we should use the FastAPI backend
+  const isExternalApi = url.startsWith('/api/') && !url.includes('/api/messages') && !url.includes('/api/register');
+  const baseUrl = isExternalApi ? 'https://backend.myadvisor.sg' : '';
+  const finalUrl = isExternalApi ? url.replace('/api', '') : url;
+  
+  const res = await fetch(`${baseUrl}${finalUrl}`, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: isExternalApi ? 'omit' : 'include', // Don't send cookies to external API
   });
 
   await throwIfResNotOk(res);
@@ -29,8 +34,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
+    const url = queryKey[0] as string;
+    const isExternalApi = url.startsWith('/api/') && !url.includes('/api/messages') && !url.includes('/api/register');
+    const baseUrl = isExternalApi ? 'https://backend.myadvisor.sg' : '';
+    const finalUrl = isExternalApi ? url.replace('/api', '') : url;
+    
+    const res = await fetch(`${baseUrl}${finalUrl}`, {
+      credentials: isExternalApi ? 'omit' : 'include',
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
