@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Message } from "@shared/schema";
+import { Question } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -12,10 +12,9 @@ import {
 } from "@/components/ui/table";
 import { Plus, Search, Edit, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "date-fns";
 
 interface MessagesListProps {
-  messages: Message[];
+  messages: Question[];
   loading: boolean;
   onCreateMessage: () => void;
   onEditMessage: (id: number) => void;
@@ -33,23 +32,23 @@ const MessagesList: FC<MessagesListProps> = ({
     <div>
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-        <h2 className="text-lg font-semibold text-slate-800">Manage Messages</h2>
+        <h2 className="text-lg font-semibold text-slate-800">Manage Questions</h2>
         <Button onClick={onCreateMessage}>
           <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Create New Message</span>
+          <span className="hidden sm:inline">Create New Question</span>
           <span className="sm:hidden">New</span>
         </Button>
       </div>
 
-      {/* Messages Table */}
+      {/* Questions Table */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b border-slate-200">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <h3 className="font-medium text-slate-700">Existing Messages</h3>
+            <h3 className="font-medium text-slate-700">Existing Questions</h3>
             <div className="relative w-full sm:w-auto max-w-sm">
               <Input 
                 type="text" 
-                placeholder="Search messages..." 
+                placeholder="Search questions..." 
                 className="pl-8 w-full" 
               />
               <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-400" />
@@ -67,9 +66,9 @@ const MessagesList: FC<MessagesListProps> = ({
               <TableHeader>
                 <TableRow>
                   <TableHead className="hidden sm:table-cell">ID</TableHead>
-                  <TableHead>Message Preview</TableHead>
-                  <TableHead className="hidden sm:table-cell">Fixed Reply</TableHead>
-                  <TableHead className="hidden md:table-cell">Created At</TableHead>
+                  <TableHead>Question Content</TableHead>
+                  <TableHead className="hidden sm:table-cell">Has Fixed Reply</TableHead>
+                  <TableHead className="hidden md:table-cell">Flow Step</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -77,7 +76,7 @@ const MessagesList: FC<MessagesListProps> = ({
                 {messages.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-slate-500">
-                      No messages found. Create your first message.
+                      No questions found. Create your first question.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -86,21 +85,19 @@ const MessagesList: FC<MessagesListProps> = ({
                       <TableCell className="hidden sm:table-cell font-medium">#{message.id}</TableCell>
                       <TableCell>
                         <div className="max-w-xs truncate">
-                          {message.content}
+                          {message.question}
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <Badge 
-                          variant={message.fixedReplyRequired ? "default" : "secondary"}
-                          className={message.fixedReplyRequired ? "bg-green-500" : ""}
+                          variant={message.triggerKeyword !== "" ? "default" : "secondary"}
+                          className={message.triggerKeyword !== "" ? "bg-green-500" : ""}
                         >
-                          {message.fixedReplyRequired ? "Yes" : "No"}
+                          {message.triggerKeyword !== "" ? "Yes" : "No"}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {message.createdAt 
-                          ? formatDate(new Date(message.createdAt), 'yyyy-MM-dd') 
-                          : 'N/A'}
+                        {`Step ${message.step}`}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
