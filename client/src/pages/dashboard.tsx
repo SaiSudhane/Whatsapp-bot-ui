@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { logout } from "@/store/auth-slice";
 import { fetchMessages } from "@/store/messages-slice";
 import { fetchUsers } from "@/store/users-slice";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import MessagesList from "@/components/messages/messages-list";
@@ -50,20 +50,10 @@ export default function Dashboard() {
       });
   }, [dispatch, toast]);
   
-  const handleLogout = async () => {
-    try {
-      await dispatch(logout()).unwrap();
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out."
-      });
-    } catch (error) {
-      toast({
-        title: "Logout failed",
-        description: error as string,
-        variant: "destructive"
-      });
-    }
+  const { user, logoutMutation } = useAuth();
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
   
   const handleOpenMessageModal = (messageId?: number) => {
@@ -84,9 +74,9 @@ export default function Dashboard() {
   };
   
   const handleOpenRepliesModal = (userId: number) => {
-    const user = usersState.users.find(u => u.id === userId);
-    if (user) {
-      dispatch({ type: 'users/setCurrentUser', payload: user });
+    const selectedUser = usersState.users.find(u => u.id === userId);
+    if (selectedUser) {
+      dispatch({ type: 'users/setCurrentUser', payload: selectedUser });
       dispatch({ type: 'users/fetchReplies', payload: userId });
       setRepliesModalOpen(true);
     }
@@ -137,7 +127,7 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title={activeTab === "messages" ? "Messages" : "Users"} 
-          userName={usersState.currentUser?.name || "Admin User"} 
+          userName={user?.name || "Admin User"} 
         />
         
         <main className="flex-1 overflow-y-auto bg-slate-50 p-3 md:p-6">

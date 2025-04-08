@@ -10,6 +10,9 @@ import {
   type InsertReply
 } from "@shared/schema";
 
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -29,6 +32,9 @@ export interface IStorage {
   createReply(reply: InsertReply): Promise<Reply>;
   getUserReplies(userId: number): Promise<Reply[]>;
   getRepliesByUserAndMessage(userId: number, messageId: number): Promise<Reply[]>;
+  
+  // Session store
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -38,6 +44,7 @@ export class MemStorage implements IStorage {
   userCurrentId: number;
   messageCurrentId: number;
   replyCurrentId: number;
+  sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -47,16 +54,23 @@ export class MemStorage implements IStorage {
     this.messageCurrentId = 1;
     this.replyCurrentId = 1;
     
+    // Initialize session store
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // Prune expired entries every 24h
+    });
+    
     // Add some sample data
     this.seedData();
   }
   
   private seedData() {
-    // Sample users
+    // Sample users with hashed passwords (these are pre-computed for simplicity)
+    // In a real app, we would use async hashing
     const user1: User = {
       id: this.userCurrentId++,
       username: "john_doe",
-      password: "password123", // In a real app, this would be hashed
+      password: "5a4d5f4d92f04e4759af96e49c4fd42175a60c91cbc2f437f4b53c281bc64362c82b99d1df7ae58cd8bdcc5e9b1843ea44007fda247b94fea11c9b26e9c5c01b.d8b41c50c7215de9c7ed699f36716ce7", // password123
       name: "John Doe",
       email: "john.doe@example.com",
       phone: "+1 (555) 123-4567",
@@ -66,7 +80,7 @@ export class MemStorage implements IStorage {
     const user2: User = {
       id: this.userCurrentId++,
       username: "jane_smith",
-      password: "password123", // In a real app, this would be hashed
+      password: "5a4d5f4d92f04e4759af96e49c4fd42175a60c91cbc2f437f4b53c281bc64362c82b99d1df7ae58cd8bdcc5e9b1843ea44007fda247b94fea11c9b26e9c5c01b.d8b41c50c7215de9c7ed699f36716ce7", // password123
       name: "Jane Smith",
       email: "jane.smith@example.com",
       phone: "+1 (555) 987-6543",
@@ -76,7 +90,7 @@ export class MemStorage implements IStorage {
     const user3: User = {
       id: this.userCurrentId++,
       username: "robert_johnson",
-      password: "password123", // In a real app, this would be hashed
+      password: "5a4d5f4d92f04e4759af96e49c4fd42175a60c91cbc2f437f4b53c281bc64362c82b99d1df7ae58cd8bdcc5e9b1843ea44007fda247b94fea11c9b26e9c5c01b.d8b41c50c7215de9c7ed699f36716ce7", // password123
       name: "Robert Johnson",
       email: "robert.j@example.com",
       phone: "+1 (555) 456-7890",
@@ -87,7 +101,7 @@ export class MemStorage implements IStorage {
     const adminUser: User = {
       id: this.userCurrentId++,
       username: "admin",
-      password: "password", // In a real app, this would be hashed
+      password: "9c51ef4ac9be0d9bc60e47938d6d258dbcbd09d0208a61c0befcd43a123f45b9bd6387e1b5939ae7e8425d7c29b1c307a16cbc9dd714e1cbc16fcce946d42d36.91eefb9fa92e09ac9f58eba0ac257a95", // password
       name: "Admin User",
       email: "admin@example.com",
       phone: "+1 (555) 999-0000",

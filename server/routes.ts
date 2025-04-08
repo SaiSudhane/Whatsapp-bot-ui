@@ -41,11 +41,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const user = await storage.getUserByUsername(username);
         if (!user) {
-          return done(null, false, { message: "Incorrect username" });
+          return done(null, false, { message: "Incorrect username or password" });
         }
-        if (user.password !== password) { // In real app, use proper password comparison
-          return done(null, false, { message: "Incorrect password" });
+        
+        // Import and use the comparePasswords utility function
+        const { comparePasswords } = await import('./password-utils');
+        const passwordMatch = await comparePasswords(password, user.password);
+        
+        if (!passwordMatch) {
+          return done(null, false, { message: "Incorrect username or password" });
         }
+        
         return done(null, user);
       } catch (err) {
         return done(err);
@@ -75,6 +81,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
   
   // Auth routes
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      // Validate user data
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Hash the password
+      const { hashPassword } = await import('./password-utils');
+      const hashedPassword = await hashPassword(userData.password);
+      
+      // Create user with hashed password
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+      });
+      
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) return next(err);
+        
+        // Return user data without password
+        const { password, ...userWithoutPassword } = user;
+        res.status(201).json(userWithoutPassword);
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      next(error);
+    }
+  });
+  
   app.post("/api/auth/login", (req, res, next) => {
     try {
       const credentials = loginSchema.parse(req.body);
