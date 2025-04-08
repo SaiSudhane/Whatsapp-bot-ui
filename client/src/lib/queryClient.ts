@@ -12,16 +12,30 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Determine if we should use the FastAPI backend
-  const isExternalApi = url.startsWith('/api/') && !url.includes('/api/messages') && !url.includes('/api/register');
-  const baseUrl = isExternalApi ? 'https://backend.myadvisor.sg' : '';
-  const finalUrl = isExternalApi ? url.replace('/api', '') : url;
+  // For this app, we'll always use the FastAPI backend for auth routes
+  const isAuthRoute = url.startsWith('/api/login') || url.startsWith('/api/logout') || url.startsWith('/api/auth');
+  const baseUrl = isAuthRoute ? 'https://backend.myadvisor.sg' : '';
+  // When using the external API, convert /api/login to /login, etc.
+  const finalUrl = isAuthRoute ? url.replace('/api', '') : url;
   
+  // Add common headers and CORS support
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (baseUrl) {
+    // Add CORS headers when using external API
+    headers["Access-Control-Allow-Origin"] = "*";
+    headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+    headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept";
+  }
+
   const res = await fetch(`${baseUrl}${finalUrl}`, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: isExternalApi ? 'omit' : 'include', // Don't send cookies to external API
+    credentials: isAuthRoute ? 'include' : 'include', // Send cookies to both internal and external API
+    mode: 'cors', // Enable CORS
   });
 
   await throwIfResNotOk(res);
@@ -35,12 +49,27 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const url = queryKey[0] as string;
-    const isExternalApi = url.startsWith('/api/') && !url.includes('/api/messages') && !url.includes('/api/register');
-    const baseUrl = isExternalApi ? 'https://backend.myadvisor.sg' : '';
-    const finalUrl = isExternalApi ? url.replace('/api', '') : url;
+    const isAuthRoute = url.startsWith('/api/login') || url.startsWith('/api/logout') || url.startsWith('/api/auth');
+    const baseUrl = isAuthRoute ? 'https://backend.myadvisor.sg' : '';
+    // When using the external API, convert /api/login to /login, etc.
+    const finalUrl = isAuthRoute ? url.replace('/api', '') : url;
     
+    // Add headers for CORS
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    if (baseUrl) {
+      // Add CORS headers when using external API
+      headers["Access-Control-Allow-Origin"] = "*";
+      headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+      headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept";
+    }
+
     const res = await fetch(`${baseUrl}${finalUrl}`, {
-      credentials: isExternalApi ? 'omit' : 'include',
+      credentials: 'include',
+      headers: headers,
+      mode: 'cors',
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
