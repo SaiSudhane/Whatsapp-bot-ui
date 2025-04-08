@@ -1,80 +1,123 @@
-import { InsertMessage, LoginCredentials } from '@shared/schema';
-import { apiRequest } from './queryClient';
+import { 
+  LoginCredentials, 
+  User, 
+  UserReply, 
+  Question,
+  AddQuestion,
+  UpdateQuestion,
+  SendMessage
+} from '@shared/schema';
 
+// Base API URL
+const API_URL = 'https://backend.myadvisor.sg';
+
+// Helper function to handle response errors
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData.detail || errorData.message || `Error: ${response.status}`;
+    throw new Error(errorMessage);
+  }
+  return response.json();
+};
+
+// Helper to get auth headers including cookies
+const getHeaders = (contentType = 'application/json') => {
+  return {
+    'Content-Type': contentType,
+  };
+};
+
+// Helper for making authenticated requests
+const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
+  const url = `${API_URL}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include', // Always include cookies for auth
+    headers: {
+      ...getHeaders(),
+      ...options.headers,
+    },
+  });
+  return handleResponse(response);
+};
+
+// Authentication services
 export const AuthAPI = {
+  // Login to the system
   login: async (credentials: LoginCredentials) => {
-    const response = await apiRequest('POST', '/api/auth/login', credentials);
-    return response.json();
+    return fetchWithAuth('/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
   },
   
+  // Logout from the system
   logout: async () => {
-    await apiRequest('POST', '/api/auth/logout');
-  },
-  
-  checkAuth: async () => {
-    const response = await fetch('/api/auth/me', {
-      credentials: 'include',
+    return fetchWithAuth('/logout', {
+      method: 'POST',
     });
-    
-    if (response.status === 401) {
-      return null;
-    }
-    
-    return response.json();
   },
 };
 
-export const MessagesAPI = {
-  getAll: async () => {
-    const response = await fetch('/api/messages', {
-      credentials: 'include',
-    });
-    return response.json();
-  },
-  
-  get: async (id: number) => {
-    const response = await fetch(`/api/messages/${id}`, {
-      credentials: 'include',
-    });
-    return response.json();
-  },
-  
-  create: async (message: InsertMessage) => {
-    const response = await apiRequest('POST', '/api/messages', message);
-    return response.json();
-  },
-  
-  update: async (id: number, message: Partial<InsertMessage>) => {
-    const response = await apiRequest('PATCH', `/api/messages/${id}`, message);
-    return response.json();
-  },
-  
-  delete: async (id: number) => {
-    await apiRequest('DELETE', `/api/messages/${id}`);
-  },
-};
-
+// User services
 export const UsersAPI = {
-  getAll: async () => {
-    const response = await fetch('/api/users', {
-      credentials: 'include',
+  // Get all users for an advisor
+  getUsers: async (advisorId: number) => {
+    return fetchWithAuth(`/users/${advisorId}`) as Promise<User[]>;
+  },
+  
+  // Get all replies for a specific user
+  getUserReplies: async (advisorId: number, userId: number) => {
+    return fetchWithAuth(`/users/${advisorId}/replies/${userId}`) as Promise<UserReply[]>;
+  },
+  
+  // Send message to a user
+  sendMessage: async (data: SendMessage) => {
+    return fetchWithAuth('/send_message', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
-    return response.json();
+  },
+};
+
+// Question services
+export const QuestionsAPI = {
+  // Get all questions for an advisor
+  getQuestions: async (advisorId: number) => {
+    return fetchWithAuth(`/questions/${advisorId}`) as Promise<{ questions: Question[] }>;
   },
   
-  getUserReplies: async (userId: number) => {
-    const response = await fetch(`/api/users/${userId}/replies`, {
-      credentials: 'include',
+  // Add a new question
+  addQuestion: async (question: AddQuestion) => {
+    return fetchWithAuth('/questions/add', {
+      method: 'POST',
+      body: JSON.stringify(question),
     });
-    return response.json();
   },
   
-  deleteUsers: async (userIds: number[]) => {
-    await apiRequest('DELETE', '/api/users', { userIds });
+  // Update an existing question
+  updateQuestion: async (id: number, question: UpdateQuestion) => {
+    return fetchWithAuth(`/questions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(question),
+    });
   },
   
-  sendPromo: async (userIds: number[], contentId: string) => {
-    const response = await apiRequest('POST', '/api/send-promo', { userIds, contentId });
-    return response.json();
+  // Delete a question
+  deleteQuestion: async (id: number) => {
+    return fetchWithAuth(`/questions/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Form submission service
+export const FormAPI = {
+  submitForm: async (data: any) => {
+    return fetchWithAuth('/submit_form', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 };

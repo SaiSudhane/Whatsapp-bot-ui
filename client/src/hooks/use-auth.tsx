@@ -1,110 +1,93 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import {
-  useQuery,
-  useMutation,
-  UseMutationResult,
-} from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
+import { useMutation, UseMutationResult, useQueryClient } from "@tanstack/react-query";
+import { LoginCredentials, LoginResponse } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
-  user: SelectUser | null;
+  user: any | null;
+  advisor: any | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
+  loginMutation: UseMutationResult<LoginResponse, Error, LoginCredentials>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
-};
-
-type LoginData = {
-  email: string;
-  password: string;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  // We need to handle this differently since the FastAPI doesn't have a "me" endpoint
-  // Instead, we'll store the user in local storage after login and retrieve it here
+  const queryClient = useQueryClient();
+  
+  // Store both the user data and advisor data
   const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [advisor, setAdvisor] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    // Get authentication data from storage
+    const storedData = localStorage.getItem('authData');
+    if (storedData) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedData = JSON.parse(storedData);
+        setUser(parsedData.user);
+        setAdvisor(parsedData.advisor);
       } catch (err) {
-        console.error("Failed to parse stored user", err);
-        localStorage.removeItem('user');
+        console.error("Failed to parse stored auth data", err);
+        localStorage.removeItem('authData');
       }
     }
+    setIsLoading(false);
   }, []);
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
+  const loginMutation = useMutation<LoginResponse, Error, LoginCredentials>({
+    mutationFn: async (credentials: LoginCredentials) => {
       try {
-        // Use our proxy endpoint instead of direct API call
-        const res = await fetch("/api/proxy/login", {
+        // Direct API call to backend
+        const res = await fetch("https://backend.myadvisor.sg/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(credentials),
+          // Include credentials to handle cookies if the API uses them
+          credentials: 'include'
         });
         
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.detail || "Login failed");
+          throw new Error(errorData.detail || errorData.message || "Login failed");
         }
         
-        const data = await res.json();
-        return data.advisor; // The FastAPI returns { message: string, advisor: object }
-      } catch (error) {
+        return await res.json() as LoginResponse;
+      } catch (error: any) {
         console.error("Login error:", error);
         throw error;
       }
     },
-    onSuccess: (user: any) => {
-      // Store user in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
+    onSuccess: (data: LoginResponse, variables: LoginCredentials) => {
+      // Store advisor info from response
+      const authData = {
+        user: variables,  // Store email for reference
+        advisor: data.advisor
+      };
+      
+      localStorage.setItem('authData', JSON.stringify(authData));
+      setUser(variables);
+      setAdvisor(data.advisor);
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.name || 'User'}!`,
+        description: data.message || `Welcome back, ${data.advisor.name || 'Advisor'}!`,
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const registerMutation = useMutation({
-    mutationFn: async (userData: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", userData);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
-      }
-      return await res.json();
-    },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/auth/me"], user);
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${user.name}!`,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message,
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
     },
@@ -113,28 +96,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       try {
-        // Use our proxy endpoint instead of direct API call
-        const res = await fetch("/api/proxy/logout", {
+        const res = await fetch("https://backend.myadvisor.sg/logout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-          }
+          },
+          credentials: 'include'
         });
         
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.detail || "Logout failed");
+          throw new Error(errorData.detail || errorData.message || "Logout failed");
         }
       } catch (error) {
         console.error("Logout error:", error);
-        // Even if the API call fails, we'll still remove the user from localStorage
+        // Even if the API call fails, we'll still remove the auth data from localStorage
         // as a fallback to ensure users can log out
       }
     },
     onSuccess: () => {
-      // Clear user from local storage
-      localStorage.removeItem('user');
+      // Clear auth data from local storage
+      localStorage.removeItem('authData');
       setUser(null);
+      setAdvisor(null);
+      
+      // Clear any cached data
+      queryClient.clear();
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
@@ -146,18 +134,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message,
         variant: "destructive",
       });
+      
+      // Still clear local data on error for better UX
+      localStorage.removeItem('authData');
+      setUser(null);
+      setAdvisor(null);
     },
   });
 
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? null,
+        user,
+        advisor,
         isLoading,
         error,
         loginMutation,
         logoutMutation,
-        registerMutation,
       }}
     >
       {children}

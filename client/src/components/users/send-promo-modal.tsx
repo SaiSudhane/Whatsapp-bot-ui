@@ -1,7 +1,4 @@
 import { FC, useState } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store";
-import { sendPromo } from "@/store/users-slice";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -12,62 +9,48 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Layers } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Layers, Loader2 } from "lucide-react";
+import WhatsAppTextEditor from "@/components/ui/whatsapp-text-editor";
 
 interface SendPromoModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedCount: number;
   selectedUsers: number[];
+  onSendMessage: (message: string) => void;
+  isPending: boolean;
 }
 
 const SendPromoModal: FC<SendPromoModalProps> = ({ 
   isOpen, 
   onClose, 
   selectedCount, 
-  selectedUsers 
+  selectedUsers,
+  onSendMessage,
+  isPending
 }) => {
-  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
   
-  const [contentId, setContentId] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
   
-  const handleSendPromo = async () => {
-    if (!contentId.trim()) {
+  const handleSendPromo = () => {
+    if (!message.trim()) {
       toast({
         title: "Validation error",
-        description: "Content ID is required",
+        description: "Message content is required",
         variant: "destructive"
       });
       return;
     }
     
-    setSubmitting(true);
-    
-    try {
-      await dispatch(sendPromo({ userIds: selectedUsers, contentId })).unwrap();
-      toast({
-        title: "Success",
-        description: `Promotional message sent to ${selectedCount} users`
-      });
-      onClose();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error as string,
-        variant: "destructive"
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    onSendMessage(message);
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={isOpen} onOpenChange={(open) => !isPending && !open && onClose()}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Send Promotional Message</DialogTitle>
           <DialogDescription>
@@ -76,30 +59,34 @@ const SendPromoModal: FC<SendPromoModalProps> = ({
         </DialogHeader>
         
         <div className="mt-4">
-          <Label htmlFor="promo-content-id">Content ID</Label>
-          <Input
-            id="promo-content-id"
-            value={contentId}
-            onChange={(e) => setContentId(e.target.value)}
-            placeholder="Enter content ID"
-            className="mt-1"
+          <Label htmlFor="promo-message" className="mb-2 block">Message Content</Label>
+          <WhatsAppTextEditor
+            id="promo-message"
+            value={message}
+            onChange={setMessage}
+            placeholder="Type your message here... Use WhatsApp formatting if needed"
+            maxLength={500}
+            rows={5}
           />
+          <p className="text-xs text-slate-500 mt-1">
+            {message.length}/500 characters
+          </p>
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSendPromo} disabled={submitting}>
-            {submitting ? (
+          <Button onClick={handleSendPromo} disabled={isPending}>
+            {isPending ? (
               <span className="flex items-center">
-                <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Sending...
               </span>
             ) : (
               <>
                 <Layers className="h-4 w-4 mr-2" />
-                Send
+                Send to {selectedCount} Users
               </>
             )}
           </Button>

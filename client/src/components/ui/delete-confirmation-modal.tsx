@@ -1,8 +1,4 @@
-import { FC, useState } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store";
-import { deleteMessage } from "@/store/messages-slice";
-import { deleteUsers } from "@/store/users-slice";
+import { FC } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -14,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -22,6 +18,8 @@ interface DeleteConfirmationModalProps {
   target: "message" | "users";
   messageId: number | null;
   selectedUsers: number[];
+  onConfirm: () => void;
+  isPending: boolean;
 }
 
 const DeleteConfirmationModal: FC<DeleteConfirmationModalProps> = ({ 
@@ -29,40 +27,14 @@ const DeleteConfirmationModal: FC<DeleteConfirmationModalProps> = ({
   onClose, 
   target, 
   messageId, 
-  selectedUsers 
+  selectedUsers,
+  onConfirm,
+  isPending
 }) => {
-  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
   
-  const [deleting, setDeleting] = useState(false);
-  
-  const handleDelete = async () => {
-    setDeleting(true);
-    
-    try {
-      if (target === "message" && messageId) {
-        await dispatch(deleteMessage(messageId)).unwrap();
-        toast({
-          title: "Success",
-          description: "Message deleted successfully"
-        });
-      } else if (target === "users" && selectedUsers.length > 0) {
-        await dispatch(deleteUsers(selectedUsers)).unwrap();
-        toast({
-          title: "Success",
-          description: `${selectedUsers.length} users deleted successfully`
-        });
-      }
-      onClose();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error as string,
-        variant: "destructive"
-      });
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    onConfirm();
   };
   
   const getTitle = () => {
@@ -94,15 +66,15 @@ const DeleteConfirmationModal: FC<DeleteConfirmationModalProps> = ({
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700"
-            disabled={deleting}
+            disabled={isPending}
           >
-            {deleting ? (
+            {isPending ? (
               <span className="flex items-center">
-                <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Deleting...
               </span>
             ) : (

@@ -1,12 +1,4 @@
 import { FC, useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store";
-import { 
-  selectUser, 
-  deselectUser, 
-  setSelectedUsers, 
-  clearSelectedUsers 
-} from "@/store/users-slice";
 import { User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +14,12 @@ import {
 import { Search, Layers, Trash, MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
 interface UsersListProps {
   users: User[];
   selectedUsers: number[];
+  setSelectedUsers: (ids: number[]) => void;
   loading: boolean;
   onViewReplies: (userId: number) => void;
   onSendPromo: () => void;
@@ -36,12 +29,12 @@ interface UsersListProps {
 const UsersList: FC<UsersListProps> = ({ 
   users, 
   selectedUsers, 
+  setSelectedUsers,
   loading, 
   onViewReplies, 
   onSendPromo, 
   onDeleteUsers 
 }) => {
-  const dispatch = useDispatch<AppDispatch>();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
   
@@ -49,8 +42,8 @@ const UsersList: FC<UsersListProps> = ({
     if (searchTerm) {
       const filtered = users.filter(user => 
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone.toLowerCase().includes(searchTerm.toLowerCase())
+        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        user.mobile_number.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredUsers(filtered);
     } else {
@@ -60,17 +53,17 @@ const UsersList: FC<UsersListProps> = ({
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      dispatch(setSelectedUsers(filteredUsers.map(user => user.id)));
+      setSelectedUsers(filteredUsers.map(user => user.id));
     } else {
-      dispatch(clearSelectedUsers());
+      setSelectedUsers([]);
     }
   };
   
   const handleSelectUser = (userId: number, checked: boolean) => {
     if (checked) {
-      dispatch(selectUser(userId));
+      setSelectedUsers([...selectedUsers, userId]);
     } else {
-      dispatch(deselectUser(userId));
+      setSelectedUsers(selectedUsers.filter(id => id !== userId));
     }
   };
   
@@ -183,15 +176,17 @@ const UsersList: FC<UsersListProps> = ({
                             <AvatarFallback className="text-slate-600">{getInitials(user.name)}</AvatarFallback>
                           </Avatar>
                           <div className="ml-3">
-                            <div className="text-sm font-medium text-slate-900">{user.name}</div>
-                            <div className="text-sm text-slate-500">{user.email}</div>
+                            <div className="text-sm font-medium text-slate-900">
+                              {user.salutation ? `${user.salutation} ` : ''}{user.name}
+                            </div>
+                            <div className="text-sm text-slate-500">{user.email || 'No email'}</div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{user.phone}</TableCell>
+                      <TableCell className="hidden md:table-cell">{user.mobile_number}</TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {user.joinedDate 
-                          ? formatDate(new Date(user.joinedDate), 'yyyy-MM-dd') 
+                        {user.created_at
+                          ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true })
                           : 'N/A'}
                       </TableCell>
                       <TableCell className="text-right">

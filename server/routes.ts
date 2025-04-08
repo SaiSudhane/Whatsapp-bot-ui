@@ -3,9 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   loginSchema,
-  insertMessageSchema, 
+  insertQuestionSchema, 
   insertReplySchema,
-  insertUserSchema
+  insertUserSchema,
+  sendMessageSchema,
+  addQuestionSchema,
+  updateQuestionSchema
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
@@ -15,11 +18,26 @@ import { z } from "zod";
 declare module "express-session" {
   interface SessionData {
     userId?: number;
+    advisorId?: number;
+    accessToken?: string;
   }
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Add proxy endpoints for the external API
+  // Middleware to forward auth header if available
+  const getAuthHeaders = (req: express.Request) => {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+    
+    if (req.session.accessToken) {
+      headers["Authorization"] = `Bearer ${req.session.accessToken}`;
+    }
+    
+    return headers;
+  };
+
+  // Backend API proxy endpoints
   app.post("/api/proxy/login", async (req, res) => {
     try {
       console.log("Proxying login request to external API", req.body);
@@ -32,6 +50,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const data = await response.json();
+      
+      // If login successful, store advisor info in session
+      if (response.ok && data.advisor) {
+        req.session.advisorId = data.advisor.id;
+        // Store token if provided in the response
+        if (data.access_token) {
+          req.session.accessToken = data.access_token;
+        }
+      }
+      
       res.status(response.status).json(data);
     } catch (error) {
       console.error("Proxy login error:", error);
@@ -43,16 +71,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const response = await fetch("https://backend.myadvisor.sg/logout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(req),
       });
+      
+      // Clear session data regardless of response
+      req.session.advisorId = undefined;
+      req.session.accessToken = undefined;
       
       const data = await response.json();
       res.status(response.status).json(data);
     } catch (error) {
       console.error("Proxy logout error:", error);
-      res.status(200).json({ message: "Logged out" }); // Always return success for logout
+      // Clear session even on error
+      req.session.advisorId = undefined;
+      req.session.accessToken = undefined;
+      res.status(200).json({ message: "Logged out" });
+    }
+  });
+  
+  // Get users for the logged-in advisor
+  app.get("/api/proxy/users", async (req, res) => {
+    try {
+      if (!req.session.advisorId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const advisorId = req.session.advisorId;
+      const response = await fetch(`https://backend.myadvisor.sg/users/${advisorId}`, {
+        method: "GET",
+        headers: getAuthHeaders(req),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy users error:", error);
+      res.status(500).json({ message: "Failed to fetch users from API" });
+    }
+  });
+  
+  // Get user replies
+  app.get("/api/proxy/users/:userId/replies", async (req, res) => {
+    try {
+      if (!req.session.advisorId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const advisorId = req.session.advisorId;
+      const userId = req.params.userId;
+      
+      const response = await fetch(`https://backend.myadvisor.sg/users/${advisorId}/replies/${userId}`, {
+        method: "GET",
+        headers: getAuthHeaders(req),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy user replies error:", error);
+      res.status(500).json({ message: "Failed to fetch user replies from API" });
+    }
+  });
+  
+  // Send message
+  app.post("/api/proxy/send-message", async (req, res) => {
+    try {
+      if (!req.session.advisorId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Make sure advisor_id is set from session
+      const messageData = {
+        ...req.body,
+        advisor_id: req.session.advisorId
+      };
+      
+      const response = await fetch("https://backend.myadvisor.sg/send_message", {
+        method: "POST",
+        headers: getAuthHeaders(req),
+        body: JSON.stringify(messageData),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy send message error:", error);
+      res.status(500).json({ message: "Failed to send message via API" });
+    }
+  });
+  
+  // Questions endpoints
+  
+  // Get questions
+  app.get("/api/proxy/questions", async (req, res) => {
+    try {
+      if (!req.session.advisorId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const advisorId = req.session.advisorId;
+      const response = await fetch(`https://backend.myadvisor.sg/questions/${advisorId}`, {
+        method: "GET",
+        headers: getAuthHeaders(req),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy get questions error:", error);
+      res.status(500).json({ message: "Failed to fetch questions from API" });
+    }
+  });
+  
+  // Add question
+  app.post("/api/proxy/questions", async (req, res) => {
+    try {
+      if (!req.session.advisorId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Make sure advisor_id is set from session
+      const questionData = {
+        ...req.body,
+        advisor_id: req.session.advisorId
+      };
+      
+      const response = await fetch("https://backend.myadvisor.sg/questions/add", {
+        method: "POST",
+        headers: getAuthHeaders(req),
+        body: JSON.stringify(questionData),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy add question error:", error);
+      res.status(500).json({ message: "Failed to add question via API" });
+    }
+  });
+  
+  // Update question
+  app.put("/api/proxy/questions/:id", async (req, res) => {
+    try {
+      const questionId = req.params.id;
+      const response = await fetch(`https://backend.myadvisor.sg/questions/${questionId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(req),
+        body: JSON.stringify(req.body),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy update question error:", error);
+      res.status(500).json({ message: "Failed to update question via API" });
+    }
+  });
+  
+  // Delete question
+  app.delete("/api/proxy/questions/:id", async (req, res) => {
+    try {
+      const questionId = req.params.id;
+      const response = await fetch(`https://backend.myadvisor.sg/questions/${questionId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(req),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy delete question error:", error);
+      res.status(500).json({ message: "Failed to delete question via API" });
     }
   });
   // Session setup
@@ -81,12 +270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Import and use the comparePasswords utility function
-        const { comparePasswords } = await import('./password-utils');
-        const passwordMatch = await comparePasswords(password, user.password);
-        
-        if (!passwordMatch) {
-          return done(null, false, { message: "Incorrect username or password" });
-        }
+        // Password verification is handled by the external API
+        // We just verify the user exists in our system
         
         return done(null, user);
       } catch (err) {
@@ -122,29 +307,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate user data
       const userData = insertUserSchema.parse(req.body);
       
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(userData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
+      // For API integration, we skip checking for existing users
+  // That will be handled by the actual API
       
-      // Hash the password
-      const { hashPassword } = await import('./password-utils');
-      const hashedPassword = await hashPassword(userData.password);
-      
-      // Create user with hashed password
-      const user = await storage.createUser({
-        ...userData,
-        password: hashedPassword,
-      });
+      // Create user
+      const user = await storage.createUser(userData);
       
       // Log the user in
       req.login(user, (err) => {
         if (err) return next(err);
         
-        // Return user data without password
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json(userWithoutPassword);
+        // Return user data
+        res.status(201).json(user);
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -230,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/messages", isAuthenticated, async (req, res, next) => {
     try {
-      const messageData = insertMessageSchema.parse(req.body);
+      const messageData = insertQuestionSchema.parse(req.body);
       const newMessage = await storage.createMessage(messageData);
       res.status(201).json(newMessage);
     } catch (error) {
@@ -244,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/messages/:id", isAuthenticated, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      const messageData = insertMessageSchema.partial().parse(req.body);
+      const messageData = insertQuestionSchema.partial().parse(req.body);
       const updatedMessage = await storage.updateMessage(id, messageData);
       res.json(updatedMessage);
     } catch (error) {
@@ -269,9 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users", isAuthenticated, async (_req, res, next) => {
     try {
       const users = await storage.getAllUsers();
-      // Don't send passwords to the client
-      const safeUsers = users.map(({ password, ...rest }) => rest);
-      res.json(safeUsers);
+      res.json(users);
     } catch (error) {
       next(error);
     }

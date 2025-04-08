@@ -1,11 +1,11 @@
 import { 
   users, 
-  messages, 
+  questions, 
   replies, 
   type User, 
   type InsertUser, 
-  type Message,
-  type InsertMessage,
+  type Question,
+  type InsertQuestion,
   type Reply,
   type InsertReply
 } from "@shared/schema";
@@ -16,17 +16,17 @@ import createMemoryStore from "memorystore";
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   deleteUsers(ids: number[]): Promise<void>;
   
   // Message operations
-  getMessage(id: number): Promise<Message | undefined>;
-  createMessage(message: InsertMessage): Promise<Message>;
-  updateMessage(id: number, message: Partial<InsertMessage>): Promise<Message>;
+  getMessage(id: number): Promise<Question | undefined>;
+  createMessage(message: InsertQuestion): Promise<Question>;
+  updateMessage(id: number, message: Partial<InsertQuestion>): Promise<Question>;
   deleteMessage(id: number): Promise<void>;
-  getAllMessages(): Promise<Message[]>;
+  getAllMessages(): Promise<Question[]>;
   
   // Reply operations
   createReply(reply: InsertReply): Promise<Reply>;
@@ -171,6 +171,12 @@ export class MemStorage implements IStorage {
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.username === username,
+    );
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email,
     );
   }
 

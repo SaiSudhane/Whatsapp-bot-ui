@@ -1,8 +1,6 @@
 import { FC, useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store";
-import { createMessage, updateMessage } from "@/store/messages-slice";
-import { Message } from "@shared/schema";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { Question, AddQuestion, UpdateQuestion } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -16,159 +14,229 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import WhatsAppTextEditor from "@/components/ui/whatsapp-text-editor";
+import { Input } from "@/components/ui/input";
+import { QuestionsAPI } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 
 interface MessageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  message: Message | null;
+  message: Question | null;
+  advisorId?: number;
 }
 
-const MessageModal: FC<MessageModalProps> = ({ isOpen, onClose, message }) => {
-  const dispatch = useDispatch<AppDispatch>();
+const MessageModal: FC<MessageModalProps> = ({ isOpen, onClose, message, advisorId }) => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  const [content, setContent] = useState("");
-  const [fixedReplyRequired, setFixedReplyRequired] = useState(false);
-  const [fixedReply, setFixedReply] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [triggerKeyword, setTriggerKeyword] = useState("");
+  const [isPredefinedAnswer, setIsPredefinedAnswer] = useState(false);
+  const [step, setStep] = useState<number>(1);
   
   const isEditing = !!message;
   
+  // Reset form when modal opens/closes or message changes
   useEffect(() => {
     if (message) {
-      setContent(message.content);
-      setFixedReplyRequired(message.fixedReplyRequired);
-      setFixedReply(message.fixedReply || "");
+      setQuestion(message.question);
+      setTriggerKeyword(message.triggerKeyword);
+      setStep(message.step);
+      // API doesn't seem to have this field in the response, but we'll keep it for future
+      setIsPredefinedAnswer(false);
     } else {
-      setContent("");
-      setFixedReplyRequired(false);
-      setFixedReply("");
+      setQuestion("");
+      setTriggerKeyword("");
+      setIsPredefinedAnswer(false);
+      
+      // Get highest step number + 1 for new questions
+      const questions = queryClient.getQueryData<Question[]>(['questions', advisorId]) || [];
+      const maxStep = questions.length > 0 
+        ? Math.max(...questions.map(q => q.step))
+        : 0;
+      setStep(maxStep + 1);
     }
-  }, [message]);
+  }, [message, isOpen, queryClient, advisorId]);
   
-  const handleSave = async () => {
-    if (!content.trim()) {
+  // Add question mutation
+  const createQuestionMutation = useMutation({
+    mutationFn: (questionData: AddQuestion) => QuestionsAPI.addQuestion(questionData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions', advisorId] });
       toast({
-        title: "Validation error",
-        description: "Message content is required",
-        variant: "destructive"
+        title: "Success",
+        description: "Question created successfully"
       });
-      return;
-    }
-    
-    if (fixedReplyRequired && !fixedReply.trim()) {
-      toast({
-        title: "Validation error",
-        description: "Fixed reply is required when enabled",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setSubmitting(true);
-    
-    try {
-      const messageData = {
-        content,
-        fixedReplyRequired,
-        fixedReply: fixedReplyRequired ? fixedReply : null
-      };
-      
-      if (isEditing && message) {
-        await dispatch(updateMessage({ id: message.id, message: messageData })).unwrap();
-        toast({
-          title: "Success",
-          description: "Message updated successfully"
-        });
-      } else {
-        await dispatch(createMessage(messageData)).unwrap();
-        toast({
-          title: "Success",
-          description: "Message created successfully"
-        });
-      }
-      
       onClose();
-    } catch (error) {
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: error as string,
+        description: error.message || "Failed to create question",
         variant: "destructive"
       });
-    } finally {
-      setSubmitting(false);
+    }
+  });
+  
+  // Update question mutation
+  const updateQuestionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: UpdateQuestion }) => 
+      QuestionsAPI.updateQuestion(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions', advisorId] });
+      toast({
+        title: "Success",
+        description: "Question updated successfully"
+      });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update question",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const handleSave = () => {
+    if (!question.trim()) {
+      toast({
+        title: "Validation error",
+        description: "Question content is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!triggerKeyword.trim()) {
+      toast({
+        title: "Validation error",
+        description: "Trigger keyword is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!advisorId) {
+      toast({
+        title: "Error",
+        description: "Advisor ID is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (isEditing && message) {
+      updateQuestionMutation.mutate({
+        id: message.id,
+        data: {
+          step,
+          question
+        }
+      });
+    } else {
+      createQuestionMutation.mutate({
+        advisor_id: advisorId,
+        question,
+        triggerKeyword,
+        is_predefined_answer: isPredefinedAnswer
+      });
     }
   };
   
+  const isPending = createQuestionMutation.isPending || updateQuestionMutation.isPending;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !isPending && !open && onClose()}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Message" : "Create New Message"}
+            {isEditing ? "Edit Question" : "Create New Question"}
           </DialogTitle>
           <DialogDescription>
             {isEditing 
-              ? "Edit your message and its properties below." 
-              : "Create a new message for your users."}
+              ? "Edit your question and its properties below." 
+              : "Create a new question for your users."}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="message-content" className="block text-sm font-medium text-slate-700 mb-1">
-              Message Content
+            <Label htmlFor="question-content" className="block text-sm font-medium text-slate-700 mb-1">
+              Question Content
             </Label>
             <WhatsAppTextEditor
-              id="message-content"
-              value={content}
-              onChange={setContent}
-              placeholder="Type your message content here..."
+              id="question-content"
+              value={question}
+              onChange={setQuestion}
+              placeholder="Type your question content here..."
               maxLength={1000}
               rows={6}
             />
           </div>
+
+          {!isEditing && (
+            <div>
+              <Label htmlFor="trigger-keyword" className="block text-sm font-medium text-slate-700 mb-1">
+                Trigger Keyword
+              </Label>
+              <Input
+                id="trigger-keyword"
+                value={triggerKeyword}
+                onChange={(e) => setTriggerKeyword(e.target.value)}
+                placeholder="Keyword that triggers this question"
+                maxLength={50}
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                This is the keyword that will trigger this question
+              </p>
+            </div>
+          )}
+          
+          {isEditing && (
+            <div>
+              <Label htmlFor="step-number" className="block text-sm font-medium text-slate-700 mb-1">
+                Step Number
+              </Label>
+              <Input
+                id="step-number"
+                type="number"
+                value={step}
+                onChange={(e) => setStep(parseInt(e.target.value) || 1)}
+                min={1}
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                The order in which this question appears
+              </p>
+            </div>
+          )}
           
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="fixed-reply-toggle"
-              checked={fixedReplyRequired}
-              onCheckedChange={(checked) => setFixedReplyRequired(checked as boolean)}
+              id="predefined-answer-toggle"
+              checked={isPredefinedAnswer}
+              onCheckedChange={(checked) => setIsPredefinedAnswer(checked as boolean)}
+              disabled={isEditing}
             />
-            <Label htmlFor="fixed-reply-toggle">
-              Fixed Reply Required
+            <Label htmlFor="predefined-answer-toggle" className={isEditing ? "text-slate-400" : ""}>
+              Predefined Answer Required
             </Label>
           </div>
-          
-          {fixedReplyRequired && (
-            <div>
-              <Label htmlFor="fixed-reply" className="block text-sm font-medium text-slate-700 mb-1">
-                Fixed Reply Content
-              </Label>
-              <WhatsAppTextEditor
-                id="fixed-reply"
-                value={fixedReply}
-                onChange={setFixedReply}
-                placeholder="Type your fixed reply here..."
-                maxLength={500}
-                rows={4}
-              />
-            </div>
-          )}
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={submitting}>
-            {submitting ? (
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending ? (
               <span className="flex items-center">
-                <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
               </span>
             ) : (
-              "Save Message"
+              "Save Question"
             )}
           </Button>
         </DialogFooter>
