@@ -45,13 +45,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || "Login failed");
+      try {
+        const res = await fetch("https://backend.myadvisor.sg/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(credentials),
+          mode: "cors"
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.detail || "Login failed");
+        }
+        
+        const data = await res.json();
+        return data.advisor; // The FastAPI returns { message: string, advisor: object }
+      } catch (error) {
+        console.error("Login error:", error);
+        throw error;
       }
-      const data = await res.json();
-      return data.advisor; // The FastAPI returns { message: string, advisor: object }
     },
     onSuccess: (user: any) => {
       // Store user in localStorage for persistence
@@ -98,10 +112,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/logout");
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || "Logout failed");
+      try {
+        const res = await fetch("https://backend.myadvisor.sg/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          mode: "cors"
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.detail || "Logout failed");
+        }
+      } catch (error) {
+        console.error("Logout error:", error);
+        // Even if the API call fails, we'll still remove the user from localStorage
+        // as a fallback to ensure users can log out
       }
     },
     onSuccess: () => {
