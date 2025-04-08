@@ -163,16 +163,12 @@ const MessageModal: FC<MessageModalProps> = ({ isOpen, onClose, message, advisor
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="question-content" className="block text-sm font-medium text-slate-700 mb-1">
-              Question Content
-            </Label>
             <WhatsAppTextEditor
-              id="question-content"
               value={question}
               onChange={setQuestion}
               placeholder="Type your question content here..."
               maxLength={1000}
-              rows={6}
+              label="Question Content"
             />
           </div>
 

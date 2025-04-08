@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Question } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,15 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Plus, Search, Edit, Trash } from "lucide-react";
+import { Plus, Search, Edit, Trash, ChevronDown, ChevronUp, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose
+} from "@/components/ui/dialog";
 
 interface MessagesListProps {
   messages: Question[];
@@ -28,6 +35,13 @@ const MessagesList: FC<MessagesListProps> = ({
   onEditMessage, 
   onDeleteMessage 
 }) => {
+  const [selectedMessage, setSelectedMessage] = useState<Question | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  
+  const handleViewMessage = (message: Question) => {
+    setSelectedMessage(message);
+    setIsViewOpen(true);
+  };
   return (
     <div>
       {/* Action Bar */}
@@ -65,7 +79,6 @@ const MessagesList: FC<MessagesListProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="hidden sm:table-cell">ID</TableHead>
                   <TableHead>Question Content</TableHead>
                   <TableHead className="hidden sm:table-cell">Has Fixed Reply</TableHead>
                   <TableHead className="hidden md:table-cell">Flow Step</TableHead>
@@ -82,7 +95,6 @@ const MessagesList: FC<MessagesListProps> = ({
                 ) : (
                   messages.map((message) => (
                     <TableRow key={message.id}>
-                      <TableCell className="hidden sm:table-cell font-medium">#{message.id}</TableCell>
                       <TableCell>
                         <div className="max-w-xs truncate">
                           {message.question}
@@ -100,6 +112,15 @@ const MessagesList: FC<MessagesListProps> = ({
                         {`Step ${message.step}`}
                       </TableCell>
                       <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleViewMessage(message)}
+                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                          title="View full content"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -157,6 +178,34 @@ const MessagesList: FC<MessagesListProps> = ({
           </div>
         )}
       </div>
+      
+      {/* Full Content Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Question Content - Step {selectedMessage?.step}</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto mt-4">
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 whitespace-pre-wrap">
+              {selectedMessage?.question}
+            </div>
+            
+            {selectedMessage?.triggerKeyword && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-slate-700 mb-1">Trigger Keyword:</p>
+                <p className="bg-primary/10 text-primary p-2 rounded inline-block font-mono">
+                  {selectedMessage.triggerKeyword}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end mt-4">
+            <DialogClose asChild>
+              <Button>Close</Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

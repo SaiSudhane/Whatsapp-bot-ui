@@ -14,7 +14,7 @@ import {
 import { Search, Layers, Trash, MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 
 interface UsersListProps {
   users: User[];
@@ -145,10 +145,10 @@ const UsersList: FC<UsersListProps> = ({
                       aria-label="Select all users"
                     />
                   </TableHead>
-                  <TableHead className="hidden sm:table-cell">ID</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Phone</TableHead>
-                  <TableHead className="hidden md:table-cell">Joined Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Contact Info</TableHead>
+                  <TableHead className="hidden sm:table-cell">Age Group</TableHead>
+                  <TableHead className="hidden md:table-cell">Response Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -169,24 +169,32 @@ const UsersList: FC<UsersListProps> = ({
                           aria-label={`Select ${user.name}`}
                         />
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell font-medium">#{user.id}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
-                          <Avatar className="h-8 w-8 bg-slate-200">
-                            <AvatarFallback className="text-slate-600">{getInitials(user.name)}</AvatarFallback>
+                          <Avatar className="h-8 w-8 bg-primary/20">
+                            <AvatarFallback className="text-primary font-medium">{getInitials(user.name)}</AvatarFallback>
                           </Avatar>
                           <div className="ml-3">
                             <div className="text-sm font-medium text-slate-900">
-                              {user.salutation ? `${user.salutation} ` : ''}{user.name}
+                              {user.name}
                             </div>
-                            <div className="text-sm text-slate-500">{user.email || 'No email'}</div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{user.mobile_number}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="space-y-1">
+                          <div className="text-sm">{user.mobile_number}</div>
+                          <div className="text-xs text-slate-500">{user.email || 'No email'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant="outline" className="bg-primary/5 text-slate-700">
+                          {user.age_group || 'Not specified'}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {user.created_at
-                          ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true })
+                          ? format(new Date(user.created_at), 'd MMMM yyyy \'at\' ha')
                           : 'N/A'}
                       </TableCell>
                       <TableCell className="text-right">

@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { QuestionsAPI, UsersAPI } from "@/lib/api";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import MessagesList from "@/components/messages/messages-list";
 import UsersList from "@/components/users/users-list";
 import MessageModal from "@/components/messages/message-modal";
@@ -270,6 +271,8 @@ export default function Dashboard() {
             />
           )}
         </main>
+        
+        <Footer />
       </div>
       
       {/* Modals */}

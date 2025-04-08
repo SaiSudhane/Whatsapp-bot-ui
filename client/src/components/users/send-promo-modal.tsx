@@ -59,18 +59,14 @@ const SendPromoModal: FC<SendPromoModalProps> = ({
         </DialogHeader>
         
         <div className="mt-4">
-          <Label htmlFor="promo-message" className="mb-2 block">Message Content</Label>
           <WhatsAppTextEditor
-            id="promo-message"
             value={message}
             onChange={setMessage}
             placeholder="Type your message here... Use WhatsApp formatting if needed"
             maxLength={500}
-            rows={5}
+            label="Message Content"
           />
-          <p className="text-xs text-slate-500 mt-1">
-            {message.length}/500 characters
-          </p>
+
         </div>
         
         <DialogFooter>
