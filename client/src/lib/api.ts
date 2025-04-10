@@ -87,7 +87,7 @@ export const UsersAPI = {
       body: JSON.stringify({
         content_sid: contentSid,
         advisor_id: advisorId,
-        user_id: userIds
+        user_ids: userIds
       }),
     });
   },

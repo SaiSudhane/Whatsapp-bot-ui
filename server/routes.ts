@@ -141,10 +141,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Make sure advisor_id is set from session
-      const messageData = {
+      let messageData = {
         ...req.body,
         advisor_id: req.session.advisorId
       };
+      
+      // Handle the case where user_id might be provided instead of user_ids
+      if (messageData.user_id && !messageData.user_ids) {
+        messageData.user_ids = messageData.user_id;
+        delete messageData.user_id;
+      }
       
       const response = await fetch("https://backend.myadvisor.sg/send_message", {
         method: "POST",
