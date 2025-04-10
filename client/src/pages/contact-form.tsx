@@ -241,7 +241,7 @@ export default function ContactForm() {
                           <FormItem>
                             <FormLabel>First Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Your first name" {...field} />
+                              <Input placeholder="Your first name" className="placeholder:text-gray-300" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -255,7 +255,7 @@ export default function ContactForm() {
                           <FormItem>
                             <FormLabel>Last Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Your last name" {...field} />
+                              <Input placeholder="Your last name" className="placeholder:text-gray-300" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -269,7 +269,7 @@ export default function ContactForm() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="your.email@example.com" {...field} />
+                              <Input placeholder="your.email@example.com" className="placeholder:text-gray-300" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -296,7 +296,8 @@ export default function ContactForm() {
                                   <div className="relative">
                                     <Input
                                       className="mb-2 h-8 text-xs"
-                                      placeholder="Search country or code..."
+                                      placeholder="Search country or code..." 
+                                      className="placeholder:text-gray-300"
                                       onChange={(e) => {
                                         const input = document.querySelector('.country-list');
                                         if (input) {
@@ -336,7 +337,7 @@ export default function ContactForm() {
                                 <FormControl>
                                   <Input 
                                     placeholder="91234567" 
-                                    className="rounded-l-none" 
+                                    className="rounded-l-none placeholder:text-gray-300" 
                                     {...field} 
                                   />
                                 </FormControl>
