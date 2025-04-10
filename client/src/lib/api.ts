@@ -80,11 +80,14 @@ export const UsersAPI = {
     });
   },
   
-  // Delete users
-  deleteUsers: async (userIds: number[]) => {
+  // Delete user
+  deleteUser: async (userId: number, advisorId: number) => {
     return fetchWithAuth('/delete_user', {
       method: 'POST',
-      body: JSON.stringify({ user_ids: userIds }),
+      body: JSON.stringify({ 
+        user_id: userId,
+        advisor_id: advisorId 
+      }),
     });
   },
 };

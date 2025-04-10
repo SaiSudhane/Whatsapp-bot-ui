@@ -120,7 +120,16 @@ export default function Dashboard() {
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: (userIds: number[]) => UsersAPI.deleteUsers(userIds),
+    mutationFn: async (userIds: number[]) => {
+      if (!advisorId) throw new Error("Advisor ID not found");
+      
+      // Delete users one by one
+      return Promise.all(
+        userIds.map(userId => 
+          UsersAPI.deleteUser(userId, advisorId)
+        )
+      );
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', advisorId] });
       toast({
