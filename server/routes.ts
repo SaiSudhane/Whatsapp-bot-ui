@@ -160,6 +160,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete users
+  app.post("/api/proxy/delete-user", async (req, res) => {
+    try {
+      if (!req.session.advisorId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Make sure advisor_id is set from session
+      const deleteData = {
+        ...req.body,
+        advisor_id: req.session.advisorId
+      };
+      
+      const response = await fetch("https://backend.myadvisor.sg/delete_user", {
+        method: "POST",
+        headers: getAuthHeaders(req),
+        body: JSON.stringify(deleteData),
+      });
+      
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Proxy delete user error:", error);
+      res.status(500).json({ message: "Failed to delete users via API" });
+    }
+  });
+  
   // Questions endpoints
   
   // Get questions
