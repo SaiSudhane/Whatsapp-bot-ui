@@ -295,9 +295,8 @@ export default function ContactForm() {
                                 <SelectContent>
                                   <div className="relative">
                                     <Input
-                                      className="mb-2 h-8 text-xs"
+                                      className="mb-2 h-8 text-xs placeholder:text-gray-300"
                                       placeholder="Search country or code..." 
-                                      className="placeholder:text-gray-300"
                                       onChange={(e) => {
                                         const input = document.querySelector('.country-list');
                                         if (input) {
