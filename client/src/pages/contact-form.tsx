@@ -127,7 +127,7 @@ export default function ContactForm() {
     <div className="min-h-screen bg-blue-50 flex flex-col">
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4 flex justify-center">
-          <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-16 object-contain" />
+          <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-20 object-contain" />
         </div>
       </header>
       
@@ -136,6 +136,9 @@ export default function ContactForm() {
           {submitted ? (
             <Card className="w-full shadow-lg border-blue-200">
               <CardHeader className="text-center border-b border-blue-100 bg-blue-50/50">
+                <div className="flex justify-center mb-4">
+                  <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-16 object-contain" />
+                </div>
                 <CardTitle className="text-2xl text-blue-800">Thank You!</CardTitle>
                 <CardDescription className="text-blue-600">
                   Your message has been received. Our advisors will contact you shortly.
@@ -163,7 +166,7 @@ export default function ContactForm() {
             <Card className="w-full shadow-lg border-blue-200">
               <CardHeader className="text-center border-b border-blue-100 bg-blue-50/50">
                 <div className="flex justify-center mb-4">
-                  <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-16 object-contain" />
+                  <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-20 object-contain" />
                 </div>
                 <CardTitle className="text-2xl text-blue-800">Contact Our Financial Advisors</CardTitle>
                 <CardDescription className="text-blue-600">
