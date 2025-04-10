@@ -79,6 +79,17 @@ export const UsersAPI = {
       body: JSON.stringify(data),
     });
   },
+  
+  // Delete user
+  deleteUser: async (userId: number, advisorId: number) => {
+    return fetchWithAuth('/delete_user', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        user_id: userId,
+        advisor_id: advisorId 
+      }),
+    });
+  },
 };
 
 // Question services

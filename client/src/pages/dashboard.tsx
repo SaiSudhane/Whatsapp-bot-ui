@@ -19,7 +19,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, advisor, logoutMutation } = useAuth();
-  
+
   const [activeTab, setActiveTab] = useState<"messages" | "users">("messages");
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [repliesModalOpen, setRepliesModalOpen] = useState(false);
@@ -31,10 +31,10 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [currentReplies, setCurrentReplies] = useState<UserReply[]>([]);
-  
+
   // Queries
   const advisorId = advisor?.id;
-  
+
   const { 
     data: questions = [], 
     isLoading: questionsLoading,
@@ -44,7 +44,7 @@ export default function Dashboard() {
     queryFn: () => advisorId ? QuestionsAPI.getQuestions(advisorId).then(res => res.questions) : Promise.resolve([]),
     enabled: !!advisorId
   });
-  
+
   const { 
     data: users = [], 
     isLoading: usersLoading,
@@ -54,7 +54,7 @@ export default function Dashboard() {
     queryFn: () => advisorId ? UsersAPI.getUsers(advisorId) : Promise.resolve([]),
     enabled: !!advisorId
   });
-  
+
   // User replies query is only enabled when viewing replies
   const { 
     data: userReplies = [],
@@ -66,7 +66,7 @@ export default function Dashboard() {
       : Promise.resolve([]),
     enabled: !!advisorId && !!currentUser?.id,
   });
-  
+
   // Mutations
   const deleteQuestionMutation = useMutation({
     mutationFn: (id: number) => QuestionsAPI.deleteQuestion(id),
@@ -86,11 +86,11 @@ export default function Dashboard() {
       });
     }
   });
-  
+
   const sendMessageMutation = useMutation({
     mutationFn: (data: { user_ids: number[], message: string }) => {
       if (!advisorId) throw new Error("Advisor ID not found");
-      
+
       // Send message to each selected user
       return Promise.all(
         data.user_ids.map(userId => 
@@ -118,14 +118,44 @@ export default function Dashboard() {
       });
     }
   });
-  
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userIds: number[]) => {
+      if (!advisorId) throw new Error("Advisor ID not found");
+      
+      // Delete users one by one
+      return Promise.all(
+        userIds.map(userId => 
+          UsersAPI.deleteUser(userId, advisorId)
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', advisorId] });
+      toast({
+        title: "Users deleted",
+        description: "The selected users have been deleted successfully."
+      });
+      handleCloseDeleteModal();
+      setSelectedUsers([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error deleting users",
+        description: error.message || "An error occurred while deleting users.",
+        variant: "destructive"
+      });
+    }
+  });
+
+
   // Handlers
   const handleLogout = () => {
     if (user) {
       logoutMutation.mutate();
     }
   };
-  
+
   const handleOpenMessageModal = (messageId?: number) => {
     if (messageId) {
       const message = questions.find(m => m.id === messageId);
@@ -137,12 +167,12 @@ export default function Dashboard() {
     }
     setMessageModalOpen(true);
   };
-  
+
   const handleCloseMessageModal = () => {
     setMessageModalOpen(false);
     setCurrentMessage(null);
   };
-  
+
   const handleOpenRepliesModal = (userId: number) => {
     const selectedUser = users.find(u => u.id === userId);
     if (selectedUser) {
@@ -150,12 +180,12 @@ export default function Dashboard() {
       setRepliesModalOpen(true);
     }
   };
-  
+
   const handleCloseRepliesModal = () => {
     setRepliesModalOpen(false);
     setCurrentUser(null);
   };
-  
+
   const handleOpenPromoModal = () => {
     if (selectedUsers.length > 0) {
       setPromoModalOpen(true);
@@ -167,11 +197,11 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleClosePromoModal = () => {
     setPromoModalOpen(false);
   };
-  
+
   const handleOpenDeleteModal = (target: "message" | "users", messageId?: number) => {
     setDeleteTarget(target);
     if (target === "message" && messageId) {
@@ -179,33 +209,27 @@ export default function Dashboard() {
     }
     setDeleteModalOpen(true);
   };
-  
+
   const handleCloseDeleteModal = () => {
     setDeleteModalOpen(false);
     setDeleteMessageId(null);
   };
-  
+
   const handleDeleteConfirm = () => {
     if (deleteTarget === "message" && deleteMessageId) {
       deleteQuestionMutation.mutate(deleteMessageId);
     } else if (deleteTarget === "users" && selectedUsers.length > 0) {
-      // In a real app, we would delete users here
-      toast({
-        title: "User deletion not implemented",
-        description: "This feature is not available in the API at this time.",
-        variant: "destructive"
-      });
-      handleCloseDeleteModal();
+      deleteUserMutation.mutate(selectedUsers);
     }
   };
-  
+
   const handleSendPromoMessage = (contentSid: string) => {
     sendMessageMutation.mutate({
       user_ids: selectedUsers,
       message: contentSid // This will now be the Content SID
     });
   };
-  
+
   // If any critical queries are loading, show a loading state
   if (!advisor || (advisorId && (questionsLoading || usersLoading))) {
     return (
@@ -217,7 +241,7 @@ export default function Dashboard() {
       </div>
     );
   }
-  
+
   // If there are errors, show them
   if (questionsError || usersError) {
     return (
@@ -237,7 +261,7 @@ export default function Dashboard() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex flex-col md:flex-row h-screen">
       <Sidebar 
@@ -245,13 +269,13 @@ export default function Dashboard() {
         onTabChange={setActiveTab} 
         onLogout={handleLogout} 
       />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title={activeTab === "messages" ? "Questions" : "Users"} 
           userName={advisor?.name || user?.email || "Admin User"} 
         />
-        
+
         <main className="flex-1 overflow-y-auto bg-slate-50 p-3 md:p-6">
           {activeTab === "messages" ? (
             <MessagesList 
@@ -273,10 +297,10 @@ export default function Dashboard() {
             />
           )}
         </main>
-        
+
         <Footer />
       </div>
-      
+
       {/* Modals */}
       <MessageModal 
         isOpen={messageModalOpen}
@@ -284,7 +308,7 @@ export default function Dashboard() {
         message={currentMessage}
         advisorId={advisorId}
       />
-      
+
       <UserRepliesModal 
         isOpen={repliesModalOpen}
         onClose={handleCloseRepliesModal}
@@ -292,7 +316,7 @@ export default function Dashboard() {
         replies={userReplies}
         loading={repliesLoading}
       />
-      
+
       <SendPromoModal 
         isOpen={promoModalOpen}
         onClose={handleClosePromoModal}
@@ -301,7 +325,7 @@ export default function Dashboard() {
         onSendMessage={handleSendPromoMessage}
         isPending={sendMessageMutation.isPending}
       />
-      
+
       <DeleteConfirmationModal 
         isOpen={deleteModalOpen}
         onClose={handleCloseDeleteModal}
@@ -309,7 +333,7 @@ export default function Dashboard() {
         messageId={deleteMessageId}
         selectedUsers={selectedUsers}
         onConfirm={handleDeleteConfirm}
-        isPending={deleteQuestionMutation.isPending}
+        isPending={deleteQuestionMutation.isPending || deleteUserMutation.isPending}
       />
     </div>
   );
