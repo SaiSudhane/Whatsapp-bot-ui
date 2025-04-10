@@ -94,12 +94,8 @@ export const UsersAPI = {
   
   // Delete user
   deleteUser: async (userId: number, advisorId: number) => {
-    return fetchWithAuth('/delete_user', {
-      method: 'POST',
-      body: JSON.stringify({ 
-        user_id: userId,
-        advisor_id: advisorId 
-      }),
+    return fetchWithAuth(`/delete_user/${userId}?advisor_id=${advisorId}`, {
+      method: 'DELETE'
     });
   },
 };
