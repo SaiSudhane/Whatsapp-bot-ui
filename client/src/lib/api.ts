@@ -51,7 +51,7 @@ export const AuthAPI = {
       body: JSON.stringify(credentials),
     });
   },
-  
+
   // Logout from the system
   logout: async () => {
     return fetchWithAuth('/logout', {
@@ -66,12 +66,12 @@ export const UsersAPI = {
   getUsers: async (advisorId: number) => {
     return fetchWithAuth(`/users/${advisorId}`) as Promise<User[]>;
   },
-  
+
   // Get all replies for a specific user
   getUserReplies: async (advisorId: number, userId: number) => {
     return fetchWithAuth(`/users/${advisorId}/replies/${userId}`) as Promise<UserReply[]>;
   },
-  
+
   // Send message to a user
   sendMessage: async (data: SendMessage) => {
     return fetchWithAuth('/send_message', {
@@ -79,7 +79,7 @@ export const UsersAPI = {
       body: JSON.stringify(data),
     });
   },
-  
+
   // Send promotional message
   sendPromoMessage: async (contentSid: string, advisorId: number, userIds: number[]) => {
     return fetchWithAuth('/send_message', {
@@ -91,11 +91,12 @@ export const UsersAPI = {
       }),
     });
   },
-  
+
   // Delete user
   deleteUser: async (userId: number, advisorId: number) => {
-    return fetchWithAuth(`/delete_user/${userId}?advisor_id=${advisorId}`, {
-      method: 'DELETE'
+    return fetchWithAuth('/delete_user', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, advisor_id: advisorId }),
     });
   },
 };
@@ -106,7 +107,7 @@ export const QuestionsAPI = {
   getQuestions: async (advisorId: number) => {
     return fetchWithAuth(`/questions/${advisorId}`) as Promise<{ questions: Question[] }>;
   },
-  
+
   // Add a new question
   addQuestion: async (question: AddQuestion) => {
     return fetchWithAuth('/questions/add', {
@@ -114,7 +115,7 @@ export const QuestionsAPI = {
       body: JSON.stringify(question),
     });
   },
-  
+
   // Update an existing question
   updateQuestion: async (id: number, question: UpdateQuestion) => {
     return fetchWithAuth(`/questions/${id}`, {
@@ -122,7 +123,7 @@ export const QuestionsAPI = {
       body: JSON.stringify(question),
     });
   },
-  
+
   // Delete a question
   deleteQuestion: async (id: number) => {
     return fetchWithAuth(`/questions/${id}`, {

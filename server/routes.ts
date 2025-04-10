@@ -167,24 +167,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete user
-  app.delete("/api/proxy/delete-user/:userId", async (req, res) => {
+  app.post("/api/proxy/delete-user", async (req, res) => {
     try {
       if (!req.session.advisorId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      const userId = req.params.userId;
-      const advisorId = req.session.advisorId;
+      // Get user_id and advisor_id from request body
+      const { user_id, advisor_id } = req.body;
+      
+      if (!user_id || !advisor_id) {
+        return res.status(400).json({ message: "Missing user_id or advisor_id in request body" });
+      }
       
       // Format data for the external API
       const deleteData = {
-        user_id: parseInt(userId),
-        advisor_id: advisorId
+        user_id: typeof user_id === 'string' ? parseInt(user_id) : user_id,
+        advisor_id: typeof advisor_id === 'string' ? parseInt(advisor_id) : advisor_id
       };
       
-      // The external backend might still expect a POST request with body
       const response = await fetch("https://backend.myadvisor.sg/delete_user", {
-        method: "POST", // Keep POST for external API as specified in requirements
+        method: "POST",
         headers: getAuthHeaders(req),
         body: JSON.stringify(deleteData),
       });
