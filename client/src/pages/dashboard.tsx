@@ -88,24 +88,16 @@ export default function Dashboard() {
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: (data: { user_ids: number[], message: string }) => {
+    mutationFn: (contentSid: string) => {
       if (!advisorId) throw new Error("Advisor ID not found");
-
-      // Send message to each selected user
-      return Promise.all(
-        data.user_ids.map(userId => 
-          UsersAPI.sendMessage({
-            advisor_id: advisorId,
-            user_id: userId,
-            message: data.message
-          })
-        )
-      );
+      
+      // Send promotional message with content_sid to all selected users
+      return UsersAPI.sendPromoMessage(contentSid, advisorId, selectedUsers);
     },
     onSuccess: () => {
       toast({
         title: "Message sent",
-        description: `Messages sent to ${selectedUsers.length} users successfully.`
+        description: `Promotional message sent to ${selectedUsers.length} users successfully.`
       });
       handleClosePromoModal();
       setSelectedUsers([]);
@@ -224,10 +216,7 @@ export default function Dashboard() {
   };
 
   const handleSendPromoMessage = (contentSid: string) => {
-    sendMessageMutation.mutate({
-      user_ids: selectedUsers,
-      message: contentSid // This will now be the Content SID
-    });
+    sendMessageMutation.mutate(contentSid);
   };
 
   // If any critical queries are loading, show a loading state

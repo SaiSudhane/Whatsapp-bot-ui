@@ -80,6 +80,18 @@ export const UsersAPI = {
     });
   },
   
+  // Send promotional message
+  sendPromoMessage: async (contentSid: string, advisorId: number, userIds: number[]) => {
+    return fetchWithAuth('/send_message', {
+      method: 'POST',
+      body: JSON.stringify({
+        content_sid: contentSid,
+        advisor_id: advisorId,
+        user_id: userIds
+      }),
+    });
+  },
+  
   // Delete user
   deleteUser: async (userId: number, advisorId: number) => {
     return fetchWithAuth('/delete_user', {
