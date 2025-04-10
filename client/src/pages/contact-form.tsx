@@ -37,7 +37,7 @@ export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
-  
+
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -52,7 +52,7 @@ export default function ContactForm() {
       recaptcha_token: "",
     },
   });
-  
+
   const onReCAPTCHAChange = (token: string | null) => {
     setRecaptchaToken(token);
   };
@@ -63,7 +63,7 @@ export default function ContactForm() {
     }
     setRecaptchaToken(null);
   };
-  
+
   const onSubmit = async (data: ContactFormValues) => {
     if (!recaptchaToken) {
       toast({
@@ -73,13 +73,13 @@ export default function ContactForm() {
       });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Fixed advisor_id for demonstration
       const advisorId = 1; // This would normally come from a configuration or route param
-      
+
       // Prepare data for submission
       const submitData = {
         ...data,
@@ -88,7 +88,7 @@ export default function ContactForm() {
         mobile_number: `${data.country_code}${data.mobile_number.replace(/^0+/, '')}`, // Normalize number format
         message: data.message || "", // Ensure message is included for API compatibility
       };
-      
+
       // Make API call to backend
       const response = await fetch("https://backend.myadvisor.sg/submit_form", {
         method: "POST",
@@ -97,18 +97,18 @@ export default function ContactForm() {
         },
         body: JSON.stringify(submitData),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to submit form");
       }
-      
+
       // Show success and reset form
       toast({
         title: "Form submitted successfully",
         description: "Thank you for your message. We'll contact you shortly.",
       });
-      
+
       setSubmitted(true);
       form.reset();
       resetReCAPTCHA();
@@ -123,7 +123,7 @@ export default function ContactForm() {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-blue-50 flex flex-col">
       <header className="bg-white shadow-sm border-b">
@@ -131,7 +131,7 @@ export default function ContactForm() {
           <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-14 object-contain" />
         </div>
       </header>
-      
+
       <main className="flex-1 px-4 py-8">
         <div className="max-w-3xl mx-auto">
           {submitted ? (
@@ -204,7 +204,7 @@ export default function ContactForm() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="age_group"
@@ -233,7 +233,7 @@ export default function ContactForm() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="first_name"
@@ -247,7 +247,7 @@ export default function ContactForm() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="last_name"
@@ -261,7 +261,7 @@ export default function ContactForm() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="email"
@@ -275,7 +275,7 @@ export default function ContactForm() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <div className="flex flex-col space-y-1.5">
                         <FormLabel>Mobile Number</FormLabel>
                         <div className="flex">
@@ -327,7 +327,7 @@ export default function ContactForm() {
                               </Select>
                             )}
                           />
-                          
+
                           <FormField
                             control={form.control}
                             name="mobile_number"
@@ -358,7 +358,7 @@ export default function ContactForm() {
                         onChange={onReCAPTCHAChange}
                       />
                     </div>
-                    
+
                     <FormField
                       control={form.control}
                       name="privacy_consent"
@@ -382,7 +382,7 @@ export default function ContactForm() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <Button 
                       type="submit" 
                       className="w-full bg-blue-600 hover:bg-blue-700"
