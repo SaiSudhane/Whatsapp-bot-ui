@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Phone } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
+import { countries } from "@/data/countries";
 
 // Form schema for contact form
 const contactFormSchema = z.object({
@@ -295,7 +296,7 @@ export default function ContactForm() {
                                   <div className="relative">
                                     <Input
                                       className="mb-2 h-8 text-xs"
-                                      placeholder="Search country..."
+                                      placeholder="Search country or code..."
                                       onChange={(e) => {
                                         const input = document.querySelector('.country-list');
                                         if (input) {
@@ -314,26 +315,13 @@ export default function ContactForm() {
                                     />
                                   </div>
                                   <div className="country-list max-h-[200px] overflow-y-auto">
-                                    <SelectItem value="+65">+65 🇸🇬 Singapore</SelectItem>
-                                    <SelectItem value="+60">+60 🇲🇾 Malaysia</SelectItem>
-                                    <SelectItem value="+62">+62 🇮🇩 Indonesia</SelectItem>
-                                    <SelectItem value="+63">+63 🇵🇭 Philippines</SelectItem>
-                                    <SelectItem value="+66">+66 🇹🇭 Thailand</SelectItem>
-                                    <SelectItem value="+1">+1 🇺🇸 USA/Canada</SelectItem>
-                                    <SelectItem value="+44">+44 🇬🇧 UK</SelectItem>
-                                    <SelectItem value="+61">+61 🇦🇺 Australia</SelectItem>
-                                    <SelectItem value="+91">+91 🇮🇳 India</SelectItem>
-                                    <SelectItem value="+86">+86 🇨🇳 China</SelectItem>
-                                    <SelectItem value="+852">+852 🇭🇰 Hong Kong</SelectItem>
-                                    <SelectItem value="+81">+81 🇯🇵 Japan</SelectItem>
-                                    <SelectItem value="+82">+82 🇰🇷 South Korea</SelectItem>
-                                    <SelectItem value="+64">+64 🇳🇿 New Zealand</SelectItem>
-                                    <SelectItem value="+971">+971 🇦🇪 UAE</SelectItem>
-                                    <SelectItem value="+33">+33 🇫🇷 France</SelectItem>
-                                    <SelectItem value="+49">+49 🇩🇪 Germany</SelectItem>
-                                    <SelectItem value="+39">+39 🇮🇹 Italy</SelectItem>
-                                    <SelectItem value="+34">+34 🇪🇸 Spain</SelectItem>
-                                    <SelectItem value="+31">+31 🇳🇱 Netherlands</SelectItem>
+                                    {countries.map((country) => (
+                                      <SelectItem key={country.code} value={country.dial_code}>
+                                        {country.dial_code} {country.flag.toUpperCase().replace(/./g, char => 
+                                          String.fromCodePoint(char.charCodeAt(0) + 127397)
+                                        )} {country.name}
+                                      </SelectItem>
+                                    ))}
                                   </div>
                                 </SelectContent>
                               </Select>
