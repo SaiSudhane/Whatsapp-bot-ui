@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import { 
   loginSchema,
   insertQuestionSchema, 
-  insertReplySchema,
   insertUserSchema,
   sendMessageSchema,
   addQuestionSchema,
@@ -187,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       const response = await fetch("https://backend.myadvisor.sg/delete_user", {
-        method: "POST",
+        method: "DELETE",
         headers: getAuthHeaders(req),
         body: JSON.stringify(deleteData),
       });

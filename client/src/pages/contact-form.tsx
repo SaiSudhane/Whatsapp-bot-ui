@@ -33,6 +33,8 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export default function ContactForm() {
   const { toast } = useToast();
+  const [countrySearch, setCountrySearch] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -126,12 +128,6 @@ export default function ContactForm() {
 
   return (
     <div className="min-h-screen bg-blue-50 flex flex-col">
-      <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-3 flex justify-center">
-          <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-14 object-contain" />
-        </div>
-      </header>
-
       <main className="flex-1 px-4 py-8">
         <div className="max-w-3xl mx-auto">
           {submitted ? (
@@ -293,37 +289,36 @@ export default function ContactForm() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <div className="relative">
-                                    <Input
-                                      className="mb-2 h-8 text-xs placeholder:text-gray-300"
-                                      placeholder="Search country or code..." 
-                                      onChange={(e) => {
-                                        const input = document.querySelector('.country-list');
-                                        if (input) {
-                                          const search = e.target.value.toLowerCase();
-                                          const items = input.querySelectorAll('[data-value]');
-                                          items.forEach(item => {
-                                            const text = item.textContent?.toLowerCase() || '';
-                                            if (text.includes(search)) {
-                                              (item as HTMLElement).style.display = '';
-                                            } else {
-                                              (item as HTMLElement).style.display = 'none';
-                                            }
-                                          });
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="country-list max-h-[200px] overflow-y-auto">
-                                    {countries.map((country) => (
-                                      <SelectItem key={country.code} value={country.dial_code}>
-                                        {country.dial_code} {country.flag.toUpperCase().replace(/./g, char => 
-                                          String.fromCodePoint(char.charCodeAt(0) + 127397)
-                                        )} {country.name}
-                                      </SelectItem>
-                                    ))}
-                                  </div>
-                                </SelectContent>
+  <div className="relative px-2 pb-1">
+    <Input
+      className="mb-2 h-8 text-xs placeholder:text-gray-400"
+      placeholder="Search country or code..."
+      value={countrySearch}
+      onChange={(e) => setCountrySearch(e.target.value)}
+    />
+  </div>
+  <div className="country-list max-h-[200px] overflow-y-auto">
+    {countries
+      .filter((country) => {
+        const query = countrySearch.toLowerCase();
+        return (
+          country.name.toLowerCase().includes(query) ||
+          country.dial_code.includes(query)
+        );
+      })
+      .map((country) => (
+        <SelectItem key={country.code} value={country.dial_code}>
+          {country.dial_code}{" "}
+          {country.flag
+            .toUpperCase()
+            .replace(/./g, (char) =>
+              String.fromCodePoint(char.charCodeAt(0) + 127397)
+            )}{" "}
+          {country.name}
+        </SelectItem>
+      ))}
+  </div>
+</SelectContent>
                               </Select>
                             )}
                           />

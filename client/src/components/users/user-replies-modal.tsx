@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { User, Reply } from "@shared/schema";
+import { User, UserReply } from "@shared/schema";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ interface UserRepliesModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
-  replies: Reply[];
+  replies: UserReply[];
   loading: boolean;
 }
 
@@ -70,7 +70,6 @@ const UserRepliesModal: FC<UserRepliesModalProps> = ({
               </Avatar>
               <div className="ml-3">
                 <div className="text-sm font-medium text-slate-900">{user.name}</div>
-                <div className="text-xs text-slate-500">{user.phone}</div>
               </div>
             </div>
           </div>
@@ -84,9 +83,8 @@ const UserRepliesModal: FC<UserRepliesModalProps> = ({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Message ID</TableHead>
-                    <TableHead>Reply Content</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>Question</TableHead>
+                    <TableHead>Reply</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -98,13 +96,10 @@ const UserRepliesModal: FC<UserRepliesModalProps> = ({
                     </TableRow>
                   ) : (
                     replies.map((reply) => (
-                      <TableRow key={reply.id}>
-                        <TableCell className="font-medium">#{reply.messageId}</TableCell>
+                      <TableRow>
+                        <TableCell className="font-medium">#{reply.question}</TableCell>
                         <TableCell>
-                          <div className="max-w-lg">{reply.content}</div>
-                        </TableCell>
-                        <TableCell>
-                          {reply.replyDate ? formatDateTime(new Date(reply.replyDate)) : 'N/A'}
+                          <div className="max-w-lg">{reply.reply}</div>
                         </TableCell>
                       </TableRow>
                     ))

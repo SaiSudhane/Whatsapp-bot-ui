@@ -30,11 +30,8 @@ export const userSchema = z.object({
 
 // User replies schema
 export const userReplySchema = z.object({
-  id: z.number(),
-  user_id: z.number(),
-  question_id: z.number(),
-  reply: z.string(),
-  created_at: z.string()
+  question: z.string(),
+  reply: z.string()
 });
 
 // Question schema
@@ -89,11 +86,8 @@ export const questions = pgTable("questions", {
 });
 
 export const replies = pgTable("replies", {
-  id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  question_id: integer("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
-  reply: text("reply").notNull(),
-  created_at: timestamp("created_at").notNull().defaultNow(),
+  question_id: text("question").notNull(),
+  reply: text("reply").notNull()
 });
 
 // ===== Export types for use in the application =====
@@ -124,12 +118,8 @@ export const insertQuestionSchema = createInsertSchema(questions).pick({
   is_predefined_answer: true,
 });
 
-export const insertReplySchema = createInsertSchema(replies).pick({
-  user_id: true,
-  question_id: true,
-  reply: true,
-});
+
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
-export type InsertReply = z.infer<typeof insertReplySchema>;
+
