@@ -26,19 +26,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Function to refresh the token
   const refreshToken = async () => {
     try {
+      const storedData = localStorage.getItem('authData');
+      if (!storedData) {
+        throw new Error("No refresh token available");
+      }
+      
+      const parsedData = JSON.parse(storedData);
+      if (!parsedData.refresh_token) {
+        throw new Error("No refresh token found in stored data");
+      }
+      
       const res = await fetch("https://backend.myadvisor.sg/refresh", {
         method: "POST",
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          refresh_token: parsedData.refresh_token
+        })
       });
 
       if (!res.ok) {
         throw new Error("Failed to refresh token");
       }
 
-      return await res.json();
+      const newTokenData = await res.json();
+      // Update stored auth data with new tokens
+      localStorage.setItem('authData', JSON.stringify({
+        ...parsedData,
+        access_token: newTokenData.access_token,
+        refresh_token: newTokenData.refresh_token
+      }));
+      
+      return newTokenData;
     } catch (error) {
       console.error("Token refresh failed:", error);
       throw error;

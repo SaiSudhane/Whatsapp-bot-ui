@@ -67,13 +67,33 @@ export const AuthAPI = {
   // Refresh token
   refreshToken: async () => {
     const authData = JSON.parse(localStorage.getItem('authData') || '{}');
+    if (!authData.refresh_token) {
+      throw new Error('No refresh token available');
+    }
+    
     const refreshRequest = new RefreshRequest({ refresh_token: authData.refresh_token });
-    const response = await fetchWithAuth('/refresh', {
+    const response = await fetch(`${API_URL}/refresh`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(refreshRequest),
     });
-    localStorage.setItem('authData', JSON.stringify(response));
-    return response;
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || `Error: ${response.status}`;
+      throw new Error(errorMessage);
+    }
+    
+    const newTokenData = await response.json();
+    localStorage.setItem('authData', JSON.stringify({
+      ...authData,
+      access_token: newTokenData.access_token,
+      refresh_token: newTokenData.refresh_token
+    }));
+    
+    return newTokenData;
   },
 
   // Logout from the system
