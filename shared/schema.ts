@@ -27,6 +27,15 @@ export const refreshTokenSchema = z.object({
   refresh_token: z.string()
 });
 
+// Refresh request class
+export class RefreshRequest {
+  refresh_token: string;
+  
+  constructor(data: { refresh_token: string }) {
+    this.refresh_token = data.refresh_token;
+  }
+}
+
 // User schema
 export const userSchema = z.object({
   id: z.number(),
