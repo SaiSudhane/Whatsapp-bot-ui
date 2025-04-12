@@ -10,7 +10,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Plus, Search, Edit, Trash, ChevronDown, ChevronUp, Eye } from "lucide-react";
+import { Plus, Search, Edit, Trash, ChevronDown, ChevronUp, Eye, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { 
   Dialog,
@@ -26,6 +26,7 @@ interface MessagesListProps {
   onCreateMessage: () => void;
   onEditMessage: (id: number) => void;
   onDeleteMessage: (id: number) => void;
+  onManageContentSids: () => void; // Added prop for content SID management
 }
 
 const MessagesList: FC<MessagesListProps> = ({ 
@@ -33,17 +34,18 @@ const MessagesList: FC<MessagesListProps> = ({
   loading, 
   onCreateMessage, 
   onEditMessage, 
-  onDeleteMessage 
+  onDeleteMessage,
+  onManageContentSids 
 }) => {
   const [selectedMessage, setSelectedMessage] = useState<Question | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const handleViewMessage = (message: Question) => {
     setSelectedMessage(message);
     setIsViewOpen(true);
   };
-  
+
   // Filter messages based on question content
   const filteredMessages = messages.filter(message => 
     message.question.toLowerCase().includes(searchQuery.toLowerCase())
@@ -53,11 +55,18 @@ const MessagesList: FC<MessagesListProps> = ({
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <h2 className="text-lg font-semibold text-slate-800">Manage Questions</h2>
-        <Button onClick={onCreateMessage}>
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Create New Question</span>
-          <span className="sm:hidden">New</span>
-        </Button>
+        <div className="flex space-x-2">
+          {onManageContentSids && (
+            <Button variant="outline" onClick={onManageContentSids}>
+              <Settings className="h-4 w-4 mr-2" /> Content SIDs
+            </Button>
+          )}
+          <Button onClick={onCreateMessage}>
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Create New Question</span>
+            <span className="sm:hidden">New</span>
+          </Button>
+        </div>
       </div>
 
       {/* Questions Table */}
@@ -77,7 +86,7 @@ const MessagesList: FC<MessagesListProps> = ({
             </div>
           </div>
         </div>
-        
+
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex justify-center items-center py-16">
@@ -153,7 +162,7 @@ const MessagesList: FC<MessagesListProps> = ({
             </Table>
           )}
         </div>
-        
+
         {messages.length > 0 && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-slate-200 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
@@ -188,7 +197,7 @@ const MessagesList: FC<MessagesListProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Full Content Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="sm:max-w-2xl">
@@ -199,7 +208,7 @@ const MessagesList: FC<MessagesListProps> = ({
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 whitespace-pre-wrap">
               {selectedMessage?.question}
             </div>
-            
+
             {selectedMessage?.triggerKeyword && (
               <div className="mt-4">
                 <p className="text-sm font-medium text-slate-700 mb-1">Trigger Keyword:</p>

@@ -11,9 +11,10 @@ import UsersList from "@/components/users/users-list";
 import MessageModal from "@/components/messages/message-modal";
 import UserRepliesModal from "@/components/users/user-replies-modal";
 import SendPromoModal from "@/components/users/send-promo-modal";
+import ContentSidModal from "@/components/messages/content-sid-modal";
 import DeleteConfirmationModal from "@/components/ui/delete-confirmation-modal";
 import { Question, User, UserReply } from "@shared/schema";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings } from "lucide-react";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [repliesModalOpen, setRepliesModalOpen] = useState(false);
   const [promoModalOpen, setPromoModalOpen] = useState(false);
+  const [contentSidModalOpen, setContentSidModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<"message" | "users">("message");
   const [deleteMessageId, setDeleteMessageId] = useState<number | null>(null);
@@ -273,6 +275,7 @@ export default function Dashboard() {
               onCreateMessage={() => handleOpenMessageModal()}
               onEditMessage={(id) => handleOpenMessageModal(id)}
               onDeleteMessage={(id) => handleOpenDeleteModal("message", id)}
+              onManageContentSids={() => setContentSidModalOpen(true)}
             />
           ) : (
             <UsersList 
@@ -296,6 +299,11 @@ export default function Dashboard() {
         onClose={handleCloseMessageModal}
         message={currentMessage}
         advisorId={advisorId}
+      />
+
+      <ContentSidModal
+        isOpen={contentSidModalOpen}
+        onClose={() => setContentSidModalOpen(false)}
       />
 
       <UserRepliesModal 
