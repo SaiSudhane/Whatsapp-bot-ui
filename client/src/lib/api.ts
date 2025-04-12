@@ -5,7 +5,9 @@ import {
   Question,
   AddQuestion,
   UpdateQuestion,
-  SendMessage
+  SendMessage,
+  LoginResponse, // Added LoginResponse schema
+  RefreshRequest // Added RefreshRequest schema
 } from '@shared/schema';
 
 // Base API URL
@@ -31,13 +33,21 @@ const getHeaders = (contentType = 'application/json') => {
 // Helper for making authenticated requests
 const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_URL}${endpoint}`;
+  const token = localStorage.getItem('authData');
+  const headers = { ...getHeaders(), ...options.headers };
+  if (token) {
+    try {
+      const authData = JSON.parse(token);
+      headers.Authorization = `Bearer ${authData.access_token}`;
+    } catch (error) {
+      console.error('Error parsing authData:', error);
+    }
+  }
+
   const response = await fetch(url, {
     ...options,
-    credentials: 'include', // Always include cookies for auth
-    headers: {
-      ...getHeaders(),
-      ...options.headers,
-    },
+    credentials: 'include', 
+    headers,
   });
   return handleResponse(response);
 };
@@ -46,17 +56,37 @@ const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
 export const AuthAPI = {
   // Login to the system
   login: async (credentials: LoginCredentials) => {
-    return fetchWithAuth('/login', {
+    const response = await fetchWithAuth('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+    localStorage.setItem('authData', JSON.stringify(response)); // Store the entire response
+    return response;
+  },
+
+  // Refresh token
+  refreshToken: async () => {
+    const authData = JSON.parse(localStorage.getItem('authData') || '{}');
+    const refreshRequest = new RefreshRequest({ refresh_token: authData.refresh_token });
+    const response = await fetchWithAuth('/refresh', {
+      method: 'POST',
+      body: JSON.stringify(refreshRequest),
+    });
+    localStorage.setItem('authData', JSON.stringify(response));
+    return response;
   },
 
   // Logout from the system
   logout: async () => {
-    return fetchWithAuth('/logout', {
+    const authData = JSON.parse(localStorage.getItem('authData') || '{}');
+    const response = await fetchWithAuth('/logout', {
       method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authData.access_token}` // Send access token for logout
+      }
     });
+    localStorage.removeItem('authData');
+    return response;
   },
 };
 

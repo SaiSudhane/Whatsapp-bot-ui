@@ -12,8 +12,19 @@ export const loginSchema = z.object({
 
 // Login response schema
 export const loginResponseSchema = z.object({
-  message: z.string(),
-  advisor: z.object({}).passthrough() // We'll accept any advisor object structure
+  access_token: z.string(),
+  token_type: z.string(),
+  refresh_token: z.string(),
+  advisor: z.object({
+    id: z.number(),
+    name: z.string(),
+    email: z.string()
+  })
+});
+
+// Refresh token request schema
+export const refreshTokenSchema = z.object({
+  refresh_token: z.string()
 });
 
 // User schema

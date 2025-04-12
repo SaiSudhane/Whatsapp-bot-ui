@@ -16,13 +16,13 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Store both the user data and advisor data
   const [user, setUser] = useState<any>(null);
   const [advisor, setAdvisor] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // Function to refresh the token
   const refreshToken = async () => {
     try {
@@ -33,18 +33,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!res.ok) {
         throw new Error("Failed to refresh token");
       }
-      
+
       return await res.json();
     } catch (error) {
       console.error("Token refresh failed:", error);
       throw error;
     }
   };
-  
+
   useEffect(() => {
     // Get authentication data from storage
     const storedData = localStorage.getItem('authData');
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsedData = JSON.parse(storedData);
         setUser(parsedData.user);
         setAdvisor(parsedData.advisor);
-        
+
         // Try to refresh the token when the app loads
         refreshToken().catch(() => {
           // If refresh fails, clear the stored data
@@ -82,12 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Include credentials to handle cookies if the API uses them
           credentials: 'include'
         });
-        
+
         if (!res.ok) {
           const errorData = await res.json();
           throw new Error(errorData.detail || errorData.message || "Login failed");
         }
-        
+
         return await res.json() as LoginResponse;
       } catch (error: any) {
         console.error("Login error:", error);
@@ -100,15 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: variables,  // Store email for reference
         advisor: data.advisor
       };
-      
+
       localStorage.setItem('authData', JSON.stringify(authData));
       setUser(variables);
       setAdvisor(data.advisor);
-      
+
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['questions'] });
-      
+
       toast({
         title: "Login successful",
         description: data.message || `Welcome back, ${data.advisor.name || 'Advisor'}!`,
@@ -123,52 +123,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const logoutMutation = useMutation({
+  const getAuthToken = () => {
+    const storedData = localStorage.getItem('authData');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        return parsedData.access_token;
+      } catch (error) {
+        console.error("Error parsing auth data:", error);
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
       try {
+        const token = getAuthToken();
+
+        if (!token) {
+          // If no token is found, just clear local state without API call
+          return;
+        }
+
         const res = await fetch("https://backend.myadvisor.sg/logout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-          },
-          credentials: 'include'
+            "Authorization": `Bearer ${token}`
+          }
         });
-        
+
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.detail || errorData.message || "Logout failed");
+          throw new Error("Logout failed");
         }
       } catch (error) {
         console.error("Logout error:", error);
-        // Even if the API call fails, we'll still remove the auth data from localStorage
-        // as a fallback to ensure users can log out
+        throw error;
       }
     },
     onSuccess: () => {
-      // Clear auth data from local storage
+      // Clear stored data
       localStorage.removeItem('authData');
       setUser(null);
       setAdvisor(null);
-      
-      // Clear any cached data
-      queryClient.clear();
-      
+
+      // Invalidate queries
+      queryClient.invalidateQueries();
+
       toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
+        title: "Logged out successfully"
       });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      
-      // Still clear local data on error for better UX
-      localStorage.removeItem('authData');
-      setUser(null);
-      setAdvisor(null);
     },
   });
 
