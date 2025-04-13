@@ -36,19 +36,6 @@ export class RefreshRequest {
   }
 }
 
-// Content SID types
-export interface ContentSids {
-  success: boolean;
-  message: string;
-  first_content_sid: string;
-  last_content_sid: string;
-}
-
-export interface UpdateContentSidsRequest {
-  first_content_sid: string;
-  last_content_sid: string;
-}
-
 // User schema
 export const userSchema = z.object({
   id: z.number(),

@@ -52,27 +52,6 @@ const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
   return handleResponse(response);
 };
 
-// Direct fetch with auth token (for external backend calls)
-const fetchWithToken = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${API_URL}${endpoint}`;
-  const token = localStorage.getItem('authData');
-  const headers = { ...getHeaders(), ...options.headers };
-  if (token) {
-    try {
-      const authData = JSON.parse(token);
-      headers.Authorization = `Bearer ${authData.access_token}`;
-    } catch (error) {
-      console.error('Error parsing authData:', error);
-    }
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-  return handleResponse(response);
-};
-
 // Authentication services
 export const AuthAPI = {
   // Login to the system
@@ -208,24 +187,6 @@ export const FormAPI = {
   submitForm: async (data: any) => {
     return fetchWithAuth('/submit_form', {
       method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-};
-
-// Config API service (content SIDs)
-export const ConfigAPI = {
-  // Get content SIDs
-  getContentSids: async () => {
-    return fetchWithToken('/config/content-sids', {
-      method: 'GET',
-    });
-  },
-  
-  // Update content SIDs
-  updateContentSids: async (data: { first_content_sid: string, last_content_sid: string }) => {
-    return fetchWithToken('/config/update-content-sids', {
-      method: 'PUT',
       body: JSON.stringify(data),
     });
   },
