@@ -14,6 +14,8 @@ import SendPromoModal from "@/components/users/send-promo-modal";
 import DeleteConfirmationModal from "@/components/ui/delete-confirmation-modal";
 import { Question, User, UserReply } from "@shared/schema";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ContentSidModal } from "@/components/ui/content-sid-modal"; // Added import
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -90,7 +92,7 @@ export default function Dashboard() {
   const sendMessageMutation = useMutation({
     mutationFn: (contentSid: string) => {
       if (!advisorId) throw new Error("Advisor ID not found");
-      
+
       // Send promotional message with content_sid to all selected users
       return UsersAPI.sendPromoMessage(contentSid, advisorId, selectedUsers);
     },
@@ -114,7 +116,7 @@ export default function Dashboard() {
   const deleteUserMutation = useMutation({
     mutationFn: async (userIds: number[]) => {
       if (!advisorId) throw new Error("Advisor ID not found");
-      
+
       // Delete users one by one
       return Promise.all(
         userIds.map(userId => 
@@ -324,6 +326,7 @@ export default function Dashboard() {
         onConfirm={handleDeleteConfirm}
         isPending={deleteQuestionMutation.isPending || deleteUserMutation.isPending}
       />
+      <ContentSidModal/> {/* Added ContentSidModal */}
     </div>
   );
 }

@@ -25,9 +25,23 @@ const handleResponse = async (response: Response) => {
 
 // Helper to get auth headers including cookies
 const getHeaders = (contentType = 'application/json') => {
-  return {
+  const headers: Record<string, string> = {
     'Content-Type': contentType,
   };
+  
+  const authData = localStorage.getItem('authData');
+  if (authData) {
+    try {
+      const { access_token } = JSON.parse(authData);
+      if (access_token) {
+        headers['Authorization'] = `Bearer ${access_token}`;
+      }
+    } catch (error) {
+      console.error('Error parsing auth data:', error);
+    }
+  }
+  
+  return headers;
 };
 
 // Helper for making authenticated requests
