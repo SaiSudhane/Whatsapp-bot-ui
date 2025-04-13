@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${parsedData.access_token}`
         },
         body: JSON.stringify({
           refresh_token: parsedData.refresh_token
@@ -55,8 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update stored auth data with new tokens
       localStorage.setItem('authData', JSON.stringify({
         ...parsedData,
-        access_token: newTokenData.access_token,
-        refresh_token: newTokenData.refresh_token
+        access_token: newTokenData.access_token, // Only update access token
       }));
       
       return newTokenData;

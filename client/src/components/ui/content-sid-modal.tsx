@@ -11,15 +11,35 @@ export function ContentSidModal() {
   const [lastSid, setLastSid] = useState("");
   const { toast } = useToast();
 
+  const getHeaders = () => {
+    const authData = localStorage.getItem('authData');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (authData) {
+      try {
+        const parsedData = JSON.parse(authData);
+        if (parsedData.access_token) {
+          headers['Authorization'] = `Bearer ${parsedData.access_token}`;
+        }
+      } catch (error) {
+        console.error('Error parsing auth data:', error);
+      }
+    }
+    return headers;
+  };
+
   const fetchContentSids = async () => {
     try {
       const response = await fetch("https://backend.myadvisor.sg/config/content-sids", {
         headers: getHeaders(),
       });
+      if (!response.ok) throw new Error('Failed to fetch content SIDs');
       const data = await response.json();
       if (data.success) {
-        setFirstSid(data.first_content_sid);
-        setLastSid(data.last_content_sid);
+        setFirstSid(data.first_content_sid || '');
+        setLastSid(data.last_content_sid || '');
       }
     } catch (error) {
       toast({
@@ -40,6 +60,7 @@ export function ContentSidModal() {
           last_content_sid: lastSid,
         }),
       });
+      if (!response.ok) throw new Error('Failed to update content SIDs');
       const data = await response.json();
       if (data.success) {
         toast({
