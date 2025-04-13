@@ -283,6 +283,7 @@ export default function Dashboard() {
                 onEditMessage={(id) => handleOpenMessageModal(id)}
                 onDeleteMessage={(id) => handleOpenDeleteModal("message", id)}
               />
+            </>
           ) : (
             <UsersList 
               users={users}
