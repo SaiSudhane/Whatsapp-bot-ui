@@ -14,7 +14,6 @@ import UserRepliesModal from "@/components/users/user-replies-modal";
 import SendPromoModal from "@/components/users/send-promo-modal";
 import DeleteConfirmationModal from "@/components/ui/delete-confirmation-modal";
 import { Question, User, UserReply } from "@shared/schema";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ContentSidModal } from "@/components/ui/content-sid-modal"; // Added import
 
