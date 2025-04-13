@@ -122,7 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         advisor: data.advisor
       };
 
-      localStorage.setItem('authData', JSON.stringify(authData));
+      // Store full response including tokens
+      localStorage.setItem('authData', JSON.stringify({
+        user: variables,
+        advisor: data.advisor,
+        access_token: data.access_token,
+        refresh_token: data.refresh_token
+      }));
       setUser(variables);
       setAdvisor(data.advisor);
 

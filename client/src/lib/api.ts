@@ -32,9 +32,9 @@ const getHeaders = (contentType = 'application/json') => {
   const authData = localStorage.getItem('authData');
   if (authData) {
     try {
-      const { access_token } = JSON.parse(authData);
-      if (access_token) {
-        headers['Authorization'] = `Bearer ${access_token}`;
+      const parsedData = JSON.parse(authData);
+      if (parsedData.access_token) {
+        headers['Authorization'] = `Bearer ${parsedData.access_token}`;
       }
     } catch (error) {
       console.error('Error parsing auth data:', error);
