@@ -269,13 +269,20 @@ export default function Dashboard() {
 
         <main className="flex-1 overflow-y-auto bg-slate-50 p-3 md:p-6">
           {activeTab === "messages" ? (
-            <MessagesList 
-              messages={questions}
-              loading={questionsLoading}
-              onCreateMessage={() => handleOpenMessageModal()}
-              onEditMessage={(id) => handleOpenMessageModal(id)}
-              onDeleteMessage={(id) => handleOpenDeleteModal("message", id)}
-            />
+            <>
+              <div className="flex justify-end gap-2 mb-4">
+                <ContentSidModal />
+                <Button onClick={() => handleOpenMessageModal()} className="bg-primary text-white">
+                  <Plus className="mr-2 h-4 w-4" /> Create New Question
+                </Button>
+              </div>
+              <MessagesList 
+                messages={questions}
+                loading={questionsLoading}
+                onCreateMessage={() => handleOpenMessageModal()}
+                onEditMessage={(id) => handleOpenMessageModal(id)}
+                onDeleteMessage={(id) => handleOpenDeleteModal("message", id)}
+              />
           ) : (
             <UsersList 
               users={users}

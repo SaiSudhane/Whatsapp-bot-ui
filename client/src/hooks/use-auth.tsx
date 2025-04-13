@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${parsedData.access_token}`
+          "Authorization": `Bearer ${parsedData.refresh_token}`
         },
         body: JSON.stringify({
           refresh_token: parsedData.refresh_token
