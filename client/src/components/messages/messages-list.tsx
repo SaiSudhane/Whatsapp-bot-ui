@@ -2,6 +2,7 @@ import { FC, useState } from "react";
 import { Question } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ContentSidModal } from "@/components/ui/content-sid-modal";
 import { 
   Table, 
   TableBody, 
@@ -52,13 +53,18 @@ const MessagesList: FC<MessagesListProps> = ({
     <div>
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-        <h2 className="text-lg font-semibold text-slate-800">Manage Questions</h2>
-        <Button onClick={onCreateMessage}>
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Create New Question</span>
-          <span className="sm:hidden">New</span>
-        </Button>
-      </div>
+  <h2 className="text-lg font-semibold text-slate-800">Manage Questions</h2>
+  
+  <div className="flex items-center gap-3 ml-auto">
+    <ContentSidModal />
+    <Button onClick={onCreateMessage}>
+      <Plus className="h-4 w-4 mr-2" />
+      <span className="hidden sm:inline">Create New Question</span>
+      <span className="sm:hidden">New</span>
+    </Button>
+  </div>
+</div>
+
 
       {/* Questions Table */}
       <div className="bg-white rounded-lg shadow">

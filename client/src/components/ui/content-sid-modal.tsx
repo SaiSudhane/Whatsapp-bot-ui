@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 export function ContentSidModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [firstSid, setFirstSid] = useState("");
-  const [lastSid, setLastSid] = useState("");
   const { toast } = useToast();
 
   const getHeaders = () => {
@@ -39,7 +38,6 @@ export function ContentSidModal() {
       const data = await response.json();
       if (data.success) {
         setFirstSid(data.first_content_sid || '');
-        setLastSid(data.last_content_sid || '');
       }
     } catch (error) {
       toast({
@@ -57,7 +55,6 @@ export function ContentSidModal() {
         headers: getHeaders(),
         body: JSON.stringify({
           first_content_sid: firstSid,
-          last_content_sid: lastSid,
         }),
       });
       if (!response.ok) throw new Error('Failed to update content SIDs');
@@ -96,14 +93,6 @@ export function ContentSidModal() {
               value={firstSid}
               onChange={(e) => setFirstSid(e.target.value)}
               placeholder="Enter first message SID"
-            />
-          </div>
-          <div className="space-y-2">
-            <label>Last Message SID</label>
-            <Input
-              value={lastSid}
-              onChange={(e) => setLastSid(e.target.value)}
-              placeholder="Enter last message SID"
             />
           </div>
           <Button onClick={updateContentSids} className="w-full">
