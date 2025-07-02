@@ -165,7 +165,7 @@ export default function ContactForm() {
                 <div className="flex justify-center mb-3">
                   <img src="/assets/logo.jpg" alt="MyAdvisor.sg Logo" className="h-12 object-contain" />
                 </div>
-                <CardTitle className="text-2xl text-blue-800">Contact Our Financial Advisors</CardTitle>
+                <CardTitle className="text-2xl text-blue-800">Contact Our Financial Advisor</CardTitle>
                 <CardDescription className="text-blue-600">
                   Complete the form below to connect with experienced advisors who can help with your financial goals.
                 </CardDescription>
